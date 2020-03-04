@@ -56,7 +56,7 @@ func (h *Host) flush_urls() {
 	output := []Url{}
 	for _,url := range h.urls {
 		if url.retrieved{
-			if !h.heuristic.check_url(url) {
+			if (!h.heuristic.check_url(url)) && (url.statuscode != 0) {
 				output = append(output, url)
 			}
 		} else {
