@@ -60,6 +60,8 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	}
 	//assign workers to each job list
 	var wg sync.WaitGroup
+	result_list := []chan Url{}
+	result_counts := []int{}
 	for _,list := range job_lists {
 		wg.Add(1)
 		jobs := make(chan Url, len(list))
@@ -69,12 +71,16 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 			jobs <- url
 		}
 		close(jobs)
-		for a := 1; a <= len(list); a++ {
+		result_list = append(result_list, results)
+		result_counts = append(result_counts, len(list))
+	}
+	//wait for all workers to return
+	for index,results := range result_list {
+		for a := 0; a < result_counts[index]; a++ {
 			res := <- results
 			output = append(output, res)
 		}
 	}
-	//wait for all workers to return
 	wg.Wait()
 	return output
 }
