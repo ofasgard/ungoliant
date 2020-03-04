@@ -2,7 +2,7 @@
 
 A webserver reconnaissance tool that proxies its results through Burp or ZAP.
 
-![example usage](https://user-images.githubusercontent.com/19550999/75889472-e3afbc00-5e24-11ea-9d61-b8db8b8f5add.png)
+![example usage](https://user-images.githubusercontent.com/19550999/75923495-1bd2f100-5e5d-11ea-973e-82a628f6971e.png)
 
 Here's how it works:
 
@@ -29,5 +29,5 @@ $ bin/ungoliant --help
 - Add the Google CSE functionality (currently implemented but not used).
 - Add more heuristics for NOT_FOUND detection, particularly based on HTTP response headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
-- Try to strip out servers that resolve to the same IP and have the same content. (?)
-
+- Rewrite the concurrency so it splits requests across multiple hosts instead of concentrating load on one host at a time.
+- Try to strip out servers that resolve to the same IP and have the same content?
