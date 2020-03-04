@@ -76,10 +76,16 @@ type Url struct {
 	statustext string
 }
 
-func (u *Url) retrieve(proxy_host string, proxy_port int, timeout int) error {
+func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) error {
 	//retrieve a URL via the proxy; this will set the "retrieved" flag regardless of whether it succeeds
 	u.retrieved = true
-	resp, err := proxy_request(u.url, proxy_host, proxy_port, timeout, u.https)
+	var resp http.Response
+	var err error
+	if proxy {
+		resp, err = proxy_request(u.url, proxy_host, proxy_port, timeout, u.https)
+	} else {
+		resp, err = basic_request(u.url, timeout, u.https)
+	}
 	if err != nil {
 		return err
 	}

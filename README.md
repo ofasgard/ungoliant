@@ -26,8 +26,8 @@ $ bin/ungoliant --help
 
 ## TODO
 
+- Make sure concurrency is done properly and fast (currently ~9000 requests on localhost takes 5 minutes).
 - Replace the quick and dirty CSV output with the actual CSV library.
-- Make it possible to simply run the tool without passing it through a proxy.
 - Add the Google CSE functionality (currently implemented but not used).
 - Add more heuristics for NOT_FOUND detection, particularly based on HTTP response headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.

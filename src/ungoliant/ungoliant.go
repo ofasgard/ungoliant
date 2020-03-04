@@ -41,10 +41,11 @@ func main() {
 		return
 	}
 	//Check the proxy.
+	proxy := true
 	_,err = check_web(proxy_host, proxy_port, timeout, false, false)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to validate the proxy: %s:%d\n", proxy_host, proxy_port)
-		return
+		fmt.Fprintf(os.Stderr, "[-] Failed to validate the proxy: %s:%d. Requests will not be recorded!\n", proxy_host, proxy_port)
+		proxy = false
 	}
 	//Attempt to read and parse the wordlist file.
 	fd,err := os.Open(wordlist_path)
@@ -55,7 +56,7 @@ func main() {
 	defer fd.Close()
 	wordlist_data,err := ioutil.ReadAll(fd)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to read data from wordlist file: %s\n", nmap_path)
+		fmt.Fprintf(os.Stderr, "[-] Failed to read data from wordlist file: %s. Try use --wordlist to specify a path.\n", nmap_path)
 		return
 	}
 	wordlist := strings.Split(string(wordlist_data), "\n")
@@ -111,7 +112,7 @@ func main() {
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
 	for index,host := range hosts {
-		canary_urls := canary_check(proxy_host, proxy_port, timeout, threads, host)
+		canary_urls := canary_check(proxy, proxy_host, proxy_port, timeout, threads, host)
 		hosts[index].heuristic = generate_heuristic(canary_urls)
 		if hosts[index].heuristic.check() {
 			checked_hosts = append(checked_hosts, hosts[index])
@@ -122,7 +123,7 @@ func main() {
 	for index,host := range checked_hosts {
 		fmt.Println("[+] Performing directory bruteforcing on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
 		checked_hosts[index] = generate_urls(host, wordlist)
-		checked_hosts[index].urls = bruteforce(proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
+		checked_hosts[index].urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
 		checked_hosts[index].flush_urls()
 	}
 	//Write results to a file.

@@ -19,29 +19,29 @@ func generate_urls(target Host, wordlist []string) Host {
 }
 
 /*
-* bruteforce_worker (proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup)
+* bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup)
 *
 * Worker function for directory bruteforcing.
 * Takes URLs as input and retrieves them.
 * The retrieved URLs are returned as output.
 */
 
-func bruteforce_worker (proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup) {
+func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
-		job.retrieve(proxy_host, proxy_port, timeout)
+		job.retrieve(proxy, proxy_host, proxy_port, timeout)
 		results <- job
 	}
 }
 
 /*
-* func bruteforce(proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url 
+* func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url 
 *
 * Worker management function for threaded directory bruteforcing.
 * Returns a []Url containing the URLs retrieved by the worker processes.
 */
 
-func bruteforce(proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url {
+func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url {
 	output := []Url{}
 	//divide the urls up into equally sized job lists
 	job_lists := [][]Url{}
@@ -64,7 +64,7 @@ func bruteforce(proxy_host string, proxy_port int, timeout int, threads int, url
 		wg.Add(1)
 		jobs := make(chan Url, len(list))
 		results := make(chan Url, len(list))
-		go bruteforce_worker(proxy_host, proxy_port, timeout, jobs, results, &wg)
+		go bruteforce_worker(proxy, proxy_host, proxy_port, timeout, jobs, results, &wg)
 		for _,url := range list {
 			jobs <- url
 		}
@@ -80,21 +80,21 @@ func bruteforce(proxy_host string, proxy_port int, timeout int, threads int, url
 }
 
 /*
-* canary_check(proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url
+* canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url
 *
 * Given a Host object and some request parameters, do a "canary check" on the webserver.
 * This means, generate some random URLs and get the responses from them.
 * Returns a slice of Url objects.
 */
 
-func canary_check(proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url {
+func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url {
 	canary_wordlist := []string{}
 	for len(canary_wordlist) < 5 {
 		candidate := random_string(10)
 		canary_wordlist = append(canary_wordlist, candidate)
 	}
 	canary_host := generate_urls(target, canary_wordlist)
-	canary_host.urls = bruteforce(proxy_host, proxy_port, timeout, threads, canary_host.urls)
+	canary_host.urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, canary_host.urls)
 	return canary_host.urls
 }
 
