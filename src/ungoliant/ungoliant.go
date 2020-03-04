@@ -92,13 +92,10 @@ func main() {
 	}
 	webresults := append(http_webresults, https_webresults...)
 	//Write results to a file.
-	webresult_str := webresults_to_csv(webresults)
-	fd,err = os.Create("webchecker.csv")
+	err = webresults_to_csv("webchecker.csv", webresults)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to write webserver results to file: webchecker.csv\n")
 	} else {
-		fd.WriteString(webresult_str)
-		fd.Close()
 		fmt.Println("[*] Wrote the webserver results to file: webchecker.csv")
 	}
 	//Initialise a database of Host objects from the webchecker results.
@@ -127,13 +124,10 @@ func main() {
 		checked_hosts[index].flush_urls()
 	}
 	//Write results to a file.
-	hosts_str := hosts_to_csv(checked_hosts)
-	fd,err = os.Create("results.csv")
+	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to write final results to file: results.csv\n")
 	} else {
-		fd.WriteString(hosts_str)
-		fd.Close()
 		fmt.Println("[*] Wrote the webserver results to file: results.csv")
 	}
 	//Done!
@@ -148,28 +142,3 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
-
-func webresults_to_csv(results []WebResult) string {
-	output := "Host,Port,Protocol,Status Code,Status Text\n"
-	for _,result := range results {
-		output += result.fqdn + "," + strconv.Itoa(result.port) + ","
-		if result.https {
-			output += "HTTPS,"
-		} else {
-			output += "HTTP,"
-		}
-		output += strconv.Itoa(result.statuscode) + "," + result.statustext + "\n"
-	}
-	return output
-}
-
-func hosts_to_csv(hosts []Host) string {
-	output := "Host, Port, Url, Status Code, Status Text\n"
-	for _,host := range hosts {
-		for _,url := range host.urls {
-			output += host.fqdn + "," + strconv.Itoa(host.port) + "," + url.url + "," + strconv.Itoa(url.statuscode) + "," + url.statustext + "\n"
-		}
-	}
-	return output
-}
-
