@@ -14,10 +14,14 @@ func main() {
 	var thread_ptr = flag.Int("threads", 3, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
+	var cx_ptr = flag.String("cse-key", "", "")
+	var cse_ptr = flag.String("cx-key", "", "")
 	flag.Parse()
 	threads := *thread_ptr
 	timeout := *timeout_ptr
 	wordlist_path := *wordlist_ptr
+	cx_key := *cx_ptr
+	cse_key := *cse_ptr
 	//Check we have enough positional arguments.
 	if flag.NArg() != 3 {
 		usage()
@@ -116,7 +120,19 @@ func main() {
 		}
 	}
 	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
-	//Use wordlist to generate candidates for each host, and begin bruteforcing.
+	//If configured, use Google CSE to add some candidates to each host.
+	if (cx_key != "") && (cse_key != "") {
+		fmt.Println("[+] Providing Google CSE checks with the provided CSE and CX keys...")
+		for index,host := range checked_hosts {
+			retrieved_urls,err := cse_search(cx_key, cse_key, "site:" + host.fqdn)
+			if err == nil {
+				for _,retrieved_url := range retrieved_urls {
+					checked_hosts[index].add_url(retrieved_url)
+				}
+			}
+		}
+	}
+	//Use the wordlist to generate candidates for each host, and begin bruteforcing.
 	for index,host := range checked_hosts {
 		fmt.Println("[+] Performing directory bruteforcing on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
 		checked_hosts[index] = generate_urls(host, wordlist)
@@ -140,5 +156,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
+	fmt.Fprintf(os.Stderr, "\t--cx-key <key>\t\tA Google Custom Search Engine CX key.\n")
+	fmt.Fprintf(os.Stderr, "\t--cse-key<key>\t\tA Google Custom Search Engine API key.\n")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }

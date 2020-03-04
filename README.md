@@ -26,7 +26,6 @@ $ bin/ungoliant --help
 
 ## TODO
 
-- Add the Google CSE functionality (currently implemented but not used).
 - Add more heuristics for NOT_FOUND detection, particularly based on HTTP response headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
 - Rewrite the concurrency so it splits requests across multiple hosts instead of concentrating load on one host at a time.
