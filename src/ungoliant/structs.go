@@ -43,13 +43,25 @@ func (h Host) base_url() string {
 
 func (h *Host) add_url(url string) {
 	//add an unretrieved URL to the host
-	new_url := Url{}
-	new_url.init(url, h.https)
-	h.urls = append(h.urls, new_url)
+	if h.check_url(url) {
+		new_url := Url{}
+		new_url.init(url, h.https)
+		h.urls = append(h.urls, new_url)
+	}
+}
+
+func (h Host) check_url(in_url string) bool {
+	//check that a URL does not already exist in the Host
+	for _,url := range h.urls {
+		if url.url == in_url {
+			return false
+		}
+	}
+	return true
 }
 
 func (h *Host) flush_urls() {
-	//goes through retrieved URLs, compares them to internal heuristic, discards them any that match
+	//goes through retrieved URLs, compares them to internal heuristic, discards any that match
 	//used to get rid of NOT_FOUND results from the internal database
 	output := []Url{}
 	for _,url := range h.urls {
@@ -73,6 +85,7 @@ type Url struct {
 	statuscode int
 	statustext string
 	header_server string
+	proto string
 }
 
 func (u *Url) init(url string, https bool) {
@@ -98,6 +111,7 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	u.statuscode = resp.StatusCode
 	u.statustext = http.StatusText(resp.StatusCode)
 	u.header_server = resp.Header.Get("Server")
+	u.proto = resp.Proto
 	return nil
 }
 
@@ -107,6 +121,7 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 type Heuristic struct {
 	statuscode int
 	header_server string
+	proto string
 }
 
 func (h Heuristic) check() bool {
@@ -125,6 +140,9 @@ func (h Heuristic) check_url(input Url) bool {
 		return false
 	}
 	if (h.header_server != "") && (input.header_server != h.header_server) {
+		return false
+	}
+	if (h.proto != "") && (input.proto != h.proto) {
 		return false
 	}
 	return true

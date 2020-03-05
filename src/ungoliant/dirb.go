@@ -127,12 +127,12 @@ func generate_heuristic(input_urls []Url) Heuristic {
 	check_status := canary_urls[0].statuscode
 	valid := true
 	for _,url := range canary_urls {
-		if url.statuscode != canary_urls[0].statuscode {
+		if url.statuscode != check_status {
 			valid = false
 		}
 	}
 	if known_good.statuscode == check_status {
-		valid = false //if canary status is the same as baseurl status, it doesn't work
+		valid = false
 	}
 	if valid {
 		output.statuscode = check_status
@@ -141,7 +141,7 @@ func generate_heuristic(input_urls []Url) Heuristic {
 	check_server := canary_urls[0].header_server
 	valid = true
 	for _,url := range canary_urls {
-		if url.header_server != canary_urls[0].header_server {
+		if url.header_server != check_server {
 			valid = false
 		}
 	}
@@ -151,6 +151,21 @@ func generate_heuristic(input_urls []Url) Heuristic {
 	if valid {
 		output.header_server = check_server
 	}
+	//check for consistent HTTP version
+	check_proto := canary_urls[0].proto
+	valid = true
+	for _,url := range canary_urls {
+		if url.proto != check_proto {
+			valid = false
+		}
+	}
+	if known_good.proto == check_proto {
+		valid = false
+	}
+	if valid {
+		output.proto = check_proto
+	}
+	//done
 	return output
 }
 
