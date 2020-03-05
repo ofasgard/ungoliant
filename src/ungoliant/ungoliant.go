@@ -135,7 +135,7 @@ func main() {
 	//Use the wordlist to generate candidates for each host, and begin bruteforcing.
 	for index,host := range checked_hosts {
 		fmt.Println("[+] Performing directory bruteforcing on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
-		checked_hosts[index] = generate_urls(host, wordlist)
+		checked_hosts[index].urls = generate_urls(host, wordlist)
 		checked_hosts[index].urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
 		checked_hosts[index].flush_urls()
 	}

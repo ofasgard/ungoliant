@@ -9,13 +9,13 @@ import "sync"
 * Returns the same Host object, populated.
 */
 
-func generate_urls(target Host, wordlist []string) Host {
+func generate_urls(target Host, wordlist []string) []Url {
 	baseurl := target.base_url()
 	for _,candidate := range wordlist {
 		new_url := baseurl + "/" + candidate
 		target.add_url(new_url)
 	}
-	return target
+	return target.urls
 }
 
 /*
@@ -89,19 +89,23 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 * canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url
 *
 * Given a Host object and some request parameters, do a "canary check" on the webserver.
-* This means, generate some random URLs and get the responses from them.
-* Returns a slice of Url objects.
+* Request the base URL and 5 randomly-generated URLs.
+* Return a list of retrieved Url objects, in order, with the base URL being the first one.
 */
 
 func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url {
+	base_url := Url{}
+	base_url.init(target.base_url(), target.https)
 	canary_wordlist := []string{}
 	for len(canary_wordlist) < 5 {
 		candidate := random_string(10)
 		canary_wordlist = append(canary_wordlist, candidate)
 	}
-	canary_host := generate_urls(target, canary_wordlist)
-	canary_host.urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, canary_host.urls)
-	return canary_host.urls
+	target.urls = generate_urls(target, canary_wordlist)
+	known_good := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, []Url{base_url})
+	canary_urls := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, target.urls[1:])
+	output := append(known_good, canary_urls...)
+	return output
 }
 
 /*
@@ -112,7 +116,9 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, th
 * The Heuristic returned from this might be "blank" if none were found, so it should be checked with its check() method.
 */
 
-func generate_heuristic(canary_urls []Url) Heuristic {
+func generate_heuristic(input_urls []Url) Heuristic {
+	known_good := input_urls[0]
+	canary_urls := input_urls[1:]
 	output := Heuristic{}
 	if len(canary_urls) < 1 {
 		return output
@@ -124,6 +130,9 @@ func generate_heuristic(canary_urls []Url) Heuristic {
 		if url.statuscode != canary_urls[0].statuscode {
 			valid = false
 		}
+	}
+	if known_good.statuscode == check_status {
+		valid = false //if canary status is the same as baseurl status, it doesn't work
 	}
 	if valid {
 		output.statuscode = check_status

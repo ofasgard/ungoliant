@@ -44,9 +44,7 @@ func (h Host) base_url() string {
 func (h *Host) add_url(url string) {
 	//add an unretrieved URL to the host
 	new_url := Url{}
-	new_url.url = url
-	new_url.https = h.https
-	new_url.retrieved = false
+	new_url.init(url, h.https)
 	h.urls = append(h.urls, new_url)
 }
 
@@ -74,6 +72,13 @@ type Url struct {
 	retrieved bool
 	statuscode int
 	statustext string
+}
+
+func (u *Url) init(url string, https bool) {
+	//initialise the URL
+	u.url = url
+	u.https = https
+	u.retrieved = false
 }
 
 func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) error {
