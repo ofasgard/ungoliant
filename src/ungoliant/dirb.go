@@ -137,6 +137,21 @@ func generate_heuristic(input_urls []Url) Heuristic {
 	if valid {
 		output.statuscode = check_status
 	}
+	//check for consistent Server header
+	check_server := canary_urls[0].header_server
+	valid = true
+	for _,url := range canary_urls {
+		if url.header_server != canary_urls[0].header_server {
+			valid = false
+		}
+	}
+	if known_good.header_server == check_server {
+		valid = false
+	}
+	if valid {
+		output.header_server = check_server
+	}
 	return output
 }
+
 

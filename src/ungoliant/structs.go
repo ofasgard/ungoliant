@@ -72,6 +72,7 @@ type Url struct {
 	retrieved bool
 	statuscode int
 	statustext string
+	header_server string
 }
 
 func (u *Url) init(url string, https bool) {
@@ -96,13 +97,16 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	}
 	u.statuscode = resp.StatusCode
 	u.statustext = http.StatusText(resp.StatusCode)
+	u.header_server = resp.Header.Get("Server")
 	return nil
 }
 
-// This struct is used to create a heuristic of what a "404" response from a webserver looks like. If a field has a nil value, it's not a viable heuristic.
+// This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.
+// If a Url matches the heuristic, it's considered to be NOT_FOUND. If it differs in any valid fields, it's considered to be FOUND.
 
 type Heuristic struct {
 	statuscode int
+	header_server string
 }
 
 func (h Heuristic) check() bool {
@@ -116,10 +120,12 @@ func (h Heuristic) check() bool {
 
 func (h Heuristic) check_url(input Url) bool {
 	//check if an Url object matches the heuristic
-	//if it does, return true - NOT FOUND
-	//if it doesn't return false - FOUND
-	if input.statuscode == h.statuscode {
-		return true
+	//returns false as soon as a field that doesn't match is identified; otherwise, returns true
+	if (h.statuscode != 0) && (input.statuscode != h.statuscode) {
+		return false
 	}
-	return false
+	if (h.header_server != "") && (input.header_server != h.header_server) {
+		return false
+	}
+	return true
 }
