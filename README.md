@@ -26,6 +26,6 @@ $ bin/ungoliant --help
 
 ## TODO
 
-- Implement some actual spidering within the tool before passing it over to Burp/ZAP.
-- Rewrite the concurrency so it splits requests across multiple hosts instead of concentrating load on one host at a time.
 - Try to strip out servers that resolve to the same IP and have the same content?
+- Do more testing on representative examples.
+- Implement some actual spidering within the tool before passing it over to Burp/ZAP.
