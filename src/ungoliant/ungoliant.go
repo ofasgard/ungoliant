@@ -157,6 +157,6 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--cx-key <key>\t\tA Google Custom Search Engine CX key.\n")
-	fmt.Fprintf(os.Stderr, "\t--cse-key<key>\t\tA Google Custom Search Engine API key.\n")
+	fmt.Fprintf(os.Stderr, "\t--cse-key <key>\t\tA Google Custom Search Engine API key.\n")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
