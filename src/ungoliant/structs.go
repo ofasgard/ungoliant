@@ -3,16 +3,6 @@ package main
 import "net/http"
 import "strconv"
 
-// This struct is used by check_web() to structure the results obtained when attempting to identify webservers.
-
-type WebResult struct {
-	fqdn string
-	port int
-	statuscode int
-	statustext string
-	https bool
-}
-
 // This struct is used to keep track of webservers during the main URL discovery phase.
 
 type Host struct {
@@ -30,7 +20,6 @@ func (h *Host) init(fqdn string, port int, https bool) {
 	h.https = https
 	h.urls = []Url{}
 	h.heuristic = Heuristic{}
-
 }
 
 func (h Host) base_url() string {

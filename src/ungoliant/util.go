@@ -33,7 +33,7 @@ func int_in_slice(list []int, search int) bool {
 	return false
 }
 
-//Export a slice of WebResult or Host objects into CSV format.
+//Export a slice of Host objects into CSV format.
 
 func export_csv(filename string, records [][]string) error {
 	fd,err := os.Create(filename)
@@ -49,17 +49,6 @@ func export_csv(filename string, records [][]string) error {
 	}
 	w.Flush()
 	return w.Error()
-}
-
-func webresults_to_csv(filename string, results []WebResult) error {
-	records := [][]string{}
-	records = append(records, []string{"Host", "Port", "Protocol", "Status Code", "Status Text"})
-	for _,result := range results {
-		var protocol string
-		if result.https { protocol = "HTTPS" } else { protocol = "HTTP" }
-		records = append(records, []string{result.fqdn, strconv.Itoa(result.port), protocol, strconv.Itoa(result.statuscode), result.statustext})
-	}
-	return export_csv(filename, records)
 }
 
 func hosts_to_csv(filename string, hosts []Host) error {

@@ -6,78 +6,69 @@ import "net/url"
 import "crypto/tls"
 import "time"
 import "strconv"
+import "sync"
 
-/*
-* check_web(fqdn string, port int, timeout int, use_https bool, verify bool) (WebResult,error)
-*
-* Check whether a webserver is running on a host and port; if it is, return a WebResult object including status code and text.
-* The use_https flag does what it says on the tin. False for HTTP, true for HTTPS.
-* The verify flag is used to enable or disable certificate verification. If turned on, invalid TLS certificates will produce an error.
-*/
+// the worker either returns Hosts with correctly initialised HTTPS, or it returns uninitialised Hosts that can be discarded
 
-func check_web(fqdn string, port int, timeout int, use_https bool, verify bool) (WebResult,error) {
-	output := WebResult{}
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verify}}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
-	request_str := ""
-	if use_https { request_str += "https://" } else { request_str += "http://" }
-	request_str += fqdn + ":" + strconv.Itoa(port) + "/"
-	req,err := http.NewRequest("GET", request_str, nil)
-	if err != nil {
-		return output, err
+func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for job := range jobs {
+		request_str := ""
+		if use_https { request_str += "https://" } else { request_str += "http://" }
+		request_str += job.fqdn + ":" + strconv.Itoa(job.port) + "/"
+		_,err := basic_request(request_str, timeout, use_https)
+		if err == nil {
+			job.init(job.fqdn, job.port, use_https)
+			results <- job
+		} else {
+			results <- Host{}
+		}
 	}
-	resp,err := client.Do(req)
-	if err != nil {
-		return output, err
-	}
-	output.fqdn = fqdn
-	output.port = port
-	output.statuscode = resp.StatusCode
-	output.statustext = http.StatusText(resp.StatusCode)
-	output.https = use_https
-	return output, nil
 }
 
-/*
-* check_webservers(hosts []Host, threadmax int, timeout int, use_https bool) []WebResult
-* 
-* Wraps the functionality in check_web() and uses goroutines for threading.
-* Returns a slice of WebResults representing the webservers that returned a valid (non-error) response.
-*/
-
-func check_webservers(hosts []Host, threadmax int, timeout int, use_https bool) []WebResult {
-	output := []WebResult{}
-	threads_todo := len(hosts)
-	thread_channels := []chan WebResult{}
-	//begin queuing up threads until there are none left to do
-	for threads_todo > 0 {
-		//if we reached our limit, wait for a thread to finish before continuing
-		if len(thread_channels) == threadmax {
-			result := <-thread_channels[0]
-			if result != (WebResult{}) {
-				output = append(output, result)
-			}
-			thread_channels = thread_channels[1:]
-		}
-		//start a new thread
-		next_host := hosts[0]
+func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
+	output := []Host{}
+	//divide the hosts into equally sized job lists
+	job_lists := [][]Host{}
+	for len(job_lists) < threads {
+		new_list := []Host {}
+		job_lists = append(job_lists, new_list)
+	}
+	index := 0
+	for len(hosts) > 0 {
+		job_lists[index] = append(job_lists[index], hosts[0])
 		hosts = hosts[1:]
-		sig := make(chan WebResult, 0)
-		go func(host Host, signal chan WebResult) {
-			res,_ := check_web(host.fqdn, host.port, timeout, use_https, false)
-			signal <-res
-		}(next_host,sig)
-		thread_channels = append(thread_channels, sig)
-		threads_todo -= 1
-	}
-	//now wait for any outstanding threads to finish
-	for len(thread_channels) > 0 {
-		result := <-thread_channels[0]
-		if result != (WebResult{}) {
-			output = append(output, result)
+		index += 1
+		if index == threads {
+			index = 0
 		}
-		thread_channels = thread_channels[1:]
 	}
+	//assign workers to each job list
+	var wg sync.WaitGroup
+	result_list := []chan Host{}
+	result_counts := []int{}
+	for _,list := range job_lists {
+		wg.Add(1)
+		jobs := make(chan Host, len(list))
+		results := make(chan Host, len(list))
+		go checkweb_worker(timeout, use_https, false, jobs, results, &wg)
+		for _,host := range list {
+			jobs <- host
+		}
+		close(jobs)
+		result_list = append(result_list, results)
+		result_counts = append(result_counts, len(list))
+	}
+	//wait for all workers to return
+	for index,results := range result_list {
+		for a := 0; a < result_counts[index]; a++ {
+			res := <- results
+			if res.fqdn != "" {
+				output = append(output, res)
+			}
+		}
+	}
+	wg.Wait()
 	return output
 }
 
@@ -100,6 +91,7 @@ func basic_request(request_url string, timeout int, use_https bool) (http.Respon
 	if err != nil {
 		return http.Response{},err
 	}
+	defer resp.Body.Close()
 	return *resp,nil
 }
 
@@ -128,6 +120,7 @@ func proxy_request(request_url string, proxy_host string, proxy_port int, timeou
 	if err != nil {
 		return http.Response{},err
 	}
+	defer resp.Body.Close()
 	return *resp,nil
 }
 

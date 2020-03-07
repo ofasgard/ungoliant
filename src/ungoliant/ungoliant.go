@@ -46,7 +46,8 @@ func main() {
 	}
 	//Check the proxy.
 	proxy := true
-	_,err = check_web(proxy_host, proxy_port, timeout, false, false)
+	proxy_url := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
+	_,err = basic_request(proxy_url, timeout, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to validate the proxy: %s:%d. Requests will not be recorded!\n", proxy_host, proxy_port)
 		proxy = false
@@ -85,30 +86,16 @@ func main() {
 	fmt.Println("[!] Identified " + strconv.Itoa(len(parsed_hosts)) + " open ports.")
 	//Now let's check for web servers.
 	fmt.Println("[+] Checking for HTTP web servers...")
-	http_webresults := check_webservers(parsed_hosts, threads, timeout, false)
-	if len(http_webresults) > 0 {
-		fmt.Println("[!] Found " + strconv.Itoa(len(http_webresults)) + " HTTP servers.")
+	http_hosts := checkweb(parsed_hosts, threads, timeout, false)
+	if len(http_hosts) > 0 {
+		fmt.Println("[!] Found " + strconv.Itoa(len(http_hosts)) + " HTTP servers.")
 	}
 	fmt.Println("[+] Checking for HTTPS web servers...")
-	https_webresults := check_webservers(parsed_hosts, threads, timeout, true)
-	if len(https_webresults) > 0 {
-		fmt.Println("[!] Found " + strconv.Itoa(len(https_webresults)) + " HTTPS servers.")
+	https_hosts := checkweb(parsed_hosts, threads, timeout, true)
+	if len(https_hosts) > 0 {
+		fmt.Println("[!] Found " + strconv.Itoa(len(https_hosts)) + " HTTPS servers.")
 	}
-	webresults := append(http_webresults, https_webresults...)
-	//Write results to a file.
-	err = webresults_to_csv("webchecker.csv", webresults)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to write webserver results to file: webchecker.csv\n")
-	} else {
-		fmt.Println("[*] Wrote the webserver results to file: webchecker.csv")
-	}
-	//Initialise a database of Host objects from the webchecker results.
-	hosts := []Host{}
-	for _,webresult := range webresults {
-		new_host := Host{}
-		new_host.init(webresult.fqdn, webresult.port, webresult.https)
-		hosts = append(hosts, new_host)
-	}
+	hosts := append(http_hosts, https_hosts...)
 	//Canary checks to ensure we can tell the difference between FOUND and NOT_FOUND pages.
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
