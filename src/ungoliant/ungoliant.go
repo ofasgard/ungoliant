@@ -113,10 +113,12 @@ func main() {
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
 	for index,host := range hosts {
-		canary_urls := canary_check(proxy, proxy_host, proxy_port, timeout, threads, host)
-		hosts[index].heuristic = generate_heuristic(canary_urls)
-		if hosts[index].heuristic.check() {
-			checked_hosts = append(checked_hosts, hosts[index])
+		known_good, canary_urls, err := canary_check(proxy, proxy_host, proxy_port, timeout, threads, host)
+		if err == nil {
+			hosts[index].heuristic = generate_heuristic(known_good, canary_urls)
+			if hosts[index].heuristic.check() {
+				checked_hosts = append(checked_hosts, hosts[index])
+			}
 		}
 	}
 	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")

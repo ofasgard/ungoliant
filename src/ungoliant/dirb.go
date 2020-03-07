@@ -86,14 +86,14 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 }
 
 /*
-* canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url
+* canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) (Url,[]Url)
 *
 * Given a Host object and some request parameters, do a "canary check" on the webserver.
 * Request the base URL and 5 randomly-generated URLs.
-* Return a list of retrieved Url objects, in order, with the base URL being the first one.
+* Returns the retrieved URLs.
 */
 
-func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) []Url {
+func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) (Url,[]Url,error) {
 	base_url := Url{}
 	base_url.init(target.base_url(), target.https)
 	canary_wordlist := []string{}
@@ -104,21 +104,18 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, th
 	target.urls = generate_urls(target, canary_wordlist)
 	known_good := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, []Url{base_url})
 	canary_urls := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, target.urls[1:])
-	output := append(known_good, canary_urls...)
-	return output
+	return known_good[0], canary_urls, known_good[0].err
 }
 
 /*
-* generate_heuristic(canary_urls []Url) Heuristic
+* generate_heuristic(known_good Url, canary_urls []Url) Heuristic
 * 
 * Given the responses from canary_check(), attempt to generate a Heuristic object.
 * Checks if various attributes of each Url object are consistent between canary responses.
 * The Heuristic returned from this might be "blank" if none were found, so it should be checked with its check() method.
 */
 
-func generate_heuristic(input_urls []Url) Heuristic {
-	known_good := input_urls[0]
-	canary_urls := input_urls[1:]
+func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 	output := Heuristic{}
 	if len(canary_urls) < 1 {
 		return output

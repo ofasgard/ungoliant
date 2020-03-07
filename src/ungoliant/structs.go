@@ -62,11 +62,11 @@ func (h Host) check_url(in_url string) bool {
 
 func (h *Host) flush_urls() {
 	//goes through retrieved URLs, compares them to internal heuristic, discards any that match
-	//used to get rid of NOT_FOUND results from the internal database
+	//used to get rid of NOT_FOUND results from the internal database, and URLs that returned an error
 	output := []Url{}
 	for _,url := range h.urls {
 		if url.retrieved{
-			if (!h.heuristic.check_url(url)) && (url.statuscode != 0) {
+			if (!h.heuristic.check_url(url)) && (url.err == nil) {
 				output = append(output, url)
 			}
 		} else {
@@ -82,6 +82,7 @@ type Url struct {
 	url string
 	https bool
 	retrieved bool
+	err error
 	statuscode int
 	statustext string
 	header_server string
@@ -93,9 +94,10 @@ func (u *Url) init(url string, https bool) {
 	u.url = url
 	u.https = https
 	u.retrieved = false
+	u.err = nil
 }
 
-func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) error {
+func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) {
 	//retrieve a URL via the proxy; this will set the "retrieved" flag regardless of whether it succeeds
 	u.retrieved = true
 	var resp http.Response
@@ -106,13 +108,13 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 		resp, err = basic_request(u.url, timeout, u.https)
 	}
 	if err != nil {
-		return err
+		u.err = err
+		return
 	}
 	u.statuscode = resp.StatusCode
 	u.statustext = http.StatusText(resp.StatusCode)
 	u.header_server = resp.Header.Get("Server")
 	u.proto = resp.Proto
-	return nil
 }
 
 // This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.

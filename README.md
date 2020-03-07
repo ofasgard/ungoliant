@@ -27,4 +27,5 @@ $ bin/ungoliant --help
 ## TODO
 
 - Do more testing on representative examples.
+- Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
