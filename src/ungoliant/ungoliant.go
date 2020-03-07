@@ -47,10 +47,12 @@ func main() {
 	//Check the proxy.
 	proxy := true
 	proxy_url := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
-	_,err = basic_request(proxy_url, timeout, false)
+	resp,err := basic_request(proxy_url, timeout, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to validate the proxy: %s:%d. Requests will not be recorded!\n", proxy_host, proxy_port)
 		proxy = false
+	} else {
+		resp.Body.Close()
 	}
 	//Attempt to read and parse the wordlist file.
 	fd,err := os.Open(wordlist_path)

@@ -8,7 +8,14 @@ import "time"
 import "strconv"
 import "sync"
 
-// the worker either returns Hosts with correctly initialised HTTPS, or it returns uninitialised Hosts that can be discarded
+/*
+* checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup)
+*
+* Worker function for checking for a webserver.
+* Takes in the Host objects to check.
+* Returns Hosts with the https attribute properly set.
+* If a Host isn't a valid webserver, it returns an uninitialised Host object.
+*/
 
 func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -16,8 +23,9 @@ func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, r
 		request_str := ""
 		if use_https { request_str += "https://" } else { request_str += "http://" }
 		request_str += job.fqdn + ":" + strconv.Itoa(job.port) + "/"
-		_,err := basic_request(request_str, timeout, use_https)
+		resp,err := basic_request(request_str, timeout, use_https)
 		if err == nil {
+			resp.Body.Close()
 			job.init(job.fqdn, job.port, use_https)
 			results <- job
 		} else {
@@ -25,6 +33,14 @@ func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, r
 		}
 	}
 }
+
+/*
+* checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host
+*
+* Worker management function for threaded directory bruteforcing.
+* Takes in the plain Host objects returned by the parse_nmap() function.
+* Returns Host objects corresponding to valid webservers.
+*/
 
 func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
 	output := []Host{}
@@ -73,40 +89,39 @@ func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
 }
 
 /*
-* basic_request(request_url string, timeout int, use_https bool) (http.Response,error)
+* basic_request(request_url string, timeout int, use_https bool) (*http.Response,error)
 *
 * Wrapper for a basic HTTP GET request. Returns a response and error value.
 */
 
-func basic_request(request_url string, timeout int, use_https bool) (http.Response,error) {
+func basic_request(request_url string, timeout int, use_https bool) (*http.Response,error) {
 	//prepare client and request
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
 	if err != nil {
-		return http.Response{},err
+		return &http.Response{},err
 	}
 	resp,err := client.Do(req)
 	if err != nil {
-		return http.Response{},err
+		return &http.Response{},err
 	}
-	defer resp.Body.Close()
-	return *resp,nil
+	return resp,nil
 }
 
 /*
-* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (http.Response,error)
+* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error)
 *
 * Make a request through the specified HTTP proxy. Returns a response and error value. Fails if the proxy is down.
 */
 
-func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (http.Response,error) {
+func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error) {
 	//prepare proxy URL
 	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
 	proxy_url,err := url.Parse(proxy_str)
 	if err != nil {
-		return http.Response{},err
+		return &http.Response{},err
 	}
 	//prepare client and request
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(proxy_url)}
@@ -114,13 +129,12 @@ func proxy_request(request_url string, proxy_host string, proxy_port int, timeou
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
 	if err != nil {
-		return http.Response{},err
+		return &http.Response{},err
 	}
 	resp,err := client.Do(req)
 	if err != nil {
-		return http.Response{},err
+		return &http.Response{},err
 	}
-	defer resp.Body.Close()
-	return *resp,nil
+	return resp,nil
 }
 

@@ -89,7 +89,7 @@ func (u *Url) init(url string, https bool) {
 func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) {
 	//retrieve a URL via the proxy; this will set the "retrieved" flag regardless of whether it succeeds
 	u.retrieved = true
-	var resp http.Response
+	var resp *http.Response
 	var err error
 	if proxy {
 		resp, err = proxy_request(u.url, proxy_host, proxy_port, timeout, u.https)
@@ -104,6 +104,7 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	u.statustext = http.StatusText(resp.StatusCode)
 	u.header_server = resp.Header.Get("Server")
 	u.proto = resp.Proto
+	resp.Body.Close()
 }
 
 // This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.

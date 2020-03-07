@@ -35,7 +35,7 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 }
 
 /*
-* func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url 
+* bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url 
 *
 * Worker management function for threaded directory bruteforcing.
 * Returns a []Url containing the URLs retrieved by the worker processes.

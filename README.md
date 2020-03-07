@@ -26,7 +26,6 @@ $ bin/ungoliant --help
 
 ## TODO
 
-- Make basic_request() and proxy_request() return a pointer to the response, and fix code that uses them so that it properly closes the response body.
 - Do more testing on representative examples.
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
