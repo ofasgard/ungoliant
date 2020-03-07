@@ -1,9 +1,7 @@
 package main
 //Contains functions for dorking using Google Custom Search Engines.
 
-import "crypto/tls"
 import "net/url"
-import "time"
 import "io/ioutil"
 import "encoding/json"
 
