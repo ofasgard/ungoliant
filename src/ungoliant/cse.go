@@ -1,7 +1,6 @@
 package main
 //Contains functions for dorking using Google Custom Search Engines.
 
-import "net/http"
 import "crypto/tls"
 import "net/url"
 import "time"
@@ -17,17 +16,12 @@ import "encoding/json"
 
 func cse_search(cxkey string, csekey string, query string) ([]string,error) {
 	results := []string{}
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: false}}
-	client := &http.Client{Transport: tr, Timeout: 5 * time.Second}
 	url := "https://www.googleapis.com/customsearch/v1?cx=" + cxkey + "&key=" + csekey + "&q=" + url.QueryEscape(query)
-	req,err := http.NewRequest("GET", url, nil)
+	resp,err := basic_request(url, 5, true)
 	if err != nil {
 		return results,err
 	}
-	resp,err := client.Do(req)
-	if err != nil {
-		return results,err
-	}
+	defer resp.Body.Close()
 	body,err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return results,err

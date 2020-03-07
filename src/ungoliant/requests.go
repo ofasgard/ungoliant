@@ -25,7 +25,7 @@ func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, r
 		request_str += job.fqdn + ":" + strconv.Itoa(job.port) + "/"
 		resp,err := basic_request(request_str, timeout, use_https)
 		if err == nil {
-			resp.Body.Close()
+			defer resp.Body.Close()
 			job.init(job.fqdn, job.port, use_https)
 			results <- job
 		} else {

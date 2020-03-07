@@ -100,11 +100,11 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 		u.err = err
 		return
 	}
+	defer resp.Body.Close()
 	u.statuscode = resp.StatusCode
 	u.statustext = http.StatusText(resp.StatusCode)
 	u.header_server = resp.Header.Get("Server")
 	u.proto = resp.Proto
-	resp.Body.Close()
 }
 
 // This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.
