@@ -9,6 +9,56 @@ import "strconv"
 import "sync"
 
 /*
+* basic_request(request_url string, timeout int, use_https bool) (*http.Response,error)
+*
+* Wrapper for a basic HTTP GET request. Returns a response and error value.
+*/
+
+func basic_request(request_url string, timeout int, use_https bool) (*http.Response,error) {
+	//prepare client and request
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
+	//perform request and return error
+	req,err := http.NewRequest("GET", request_url, nil)
+	if err != nil {
+		return &http.Response{},err
+	}
+	resp,err := client.Do(req)
+	if err != nil {
+		return &http.Response{},err
+	}
+	return resp,nil
+}
+
+/*
+* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error)
+*
+* Make a request through the specified HTTP proxy. Returns a response and error value. Fails if the proxy is down.
+*/
+
+func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error) {
+	//prepare proxy URL
+	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
+	proxy_url,err := url.Parse(proxy_str)
+	if err != nil {
+		return &http.Response{},err
+	}
+	//prepare client and request
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(proxy_url)}
+	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
+	//perform request and return error
+	req,err := http.NewRequest("GET", request_url, nil)
+	if err != nil {
+		return &http.Response{},err
+	}
+	resp,err := client.Do(req)
+	if err != nil {
+		return &http.Response{},err
+	}
+	return resp,nil
+}
+
+/*
 * checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup)
 *
 * Worker function for checking for a webserver.
@@ -86,55 +136,5 @@ func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
 	}
 	wg.Wait()
 	return output
-}
-
-/*
-* basic_request(request_url string, timeout int, use_https bool) (*http.Response,error)
-*
-* Wrapper for a basic HTTP GET request. Returns a response and error value.
-*/
-
-func basic_request(request_url string, timeout int, use_https bool) (*http.Response,error) {
-	//prepare client and request
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
-	//perform request and return error
-	req,err := http.NewRequest("GET", request_url, nil)
-	if err != nil {
-		return &http.Response{},err
-	}
-	resp,err := client.Do(req)
-	if err != nil {
-		return &http.Response{},err
-	}
-	return resp,nil
-}
-
-/*
-* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error)
-*
-* Make a request through the specified HTTP proxy. Returns a response and error value. Fails if the proxy is down.
-*/
-
-func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error) {
-	//prepare proxy URL
-	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
-	proxy_url,err := url.Parse(proxy_str)
-	if err != nil {
-		return &http.Response{},err
-	}
-	//prepare client and request
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(proxy_url)}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
-	//perform request and return error
-	req,err := http.NewRequest("GET", request_url, nil)
-	if err != nil {
-		return &http.Response{},err
-	}
-	resp,err := client.Do(req)
-	if err != nil {
-		return &http.Response{},err
-	}
-	return resp,nil
 }
 
