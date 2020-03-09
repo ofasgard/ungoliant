@@ -143,7 +143,7 @@ func (h Heuristic) check_url(input Url) bool {
 	if (h.proto != "") && (input.proto != h.proto) {
 		return false
 	}
-	if (h.html_title != "") && (input.html_title == h.html_title) {
+	if (h.html_title != "") && (input.html_title != h.html_title) {
 		return false
 	}
 	return true
