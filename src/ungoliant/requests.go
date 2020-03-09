@@ -7,6 +7,7 @@ import "crypto/tls"
 import "time"
 import "strconv"
 import "sync"
+import "golang.org/x/net/html"
 
 /*
 * basic_request(request_url string, timeout int, use_https bool) (*http.Response,error)
@@ -136,5 +137,35 @@ func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
 	}
 	wg.Wait()
 	return output
+}
+
+
+//Here is some stolen code to extract the title from HTML
+
+func isTitleElement(n *html.Node) bool {
+	return n.Type == html.ElementNode && n.Data == "title"
+}
+
+func traverse(n *html.Node) (string, bool) {
+	if isTitleElement(n) {
+		return n.FirstChild.Data, true
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		result, ok := traverse(c)
+		if ok {
+			return result, ok
+		}
+	}
+
+	return "", false
+}
+
+func get_html_title(r *http.Response) (string, bool) {
+	doc, err := html.Parse(r.Body)
+	if err != nil {
+		return "",false
+	}
+	return traverse(doc)
 }
 

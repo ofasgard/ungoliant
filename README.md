@@ -15,7 +15,11 @@ Ungoliant also logs its results to a few CSV files, so you can parse them yourse
 
 ## Building
 
-Ungoliant doesn't have any external dependencies besides Go itself. To build it, just do:
+Ungoliant has the following dependencies:
+
+- golang.org/x/net/html
+
+To build it, just do:
 
 ```shell
 $ git clone https://github.com/ofasgard/ungoliant

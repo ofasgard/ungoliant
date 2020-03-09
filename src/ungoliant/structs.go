@@ -76,6 +76,7 @@ type Url struct {
 	statustext string
 	header_server string
 	proto string
+	html_title string
 }
 
 func (u *Url) init(url string, https bool) {
@@ -105,6 +106,10 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	u.statustext = http.StatusText(resp.StatusCode)
 	u.header_server = resp.Header.Get("Server")
 	u.proto = resp.Proto
+	title,success := get_html_title(resp)
+	if success == true {
+		u.html_title = title
+	}
 }
 
 // This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.
@@ -114,6 +119,7 @@ type Heuristic struct {
 	statuscode int
 	header_server string
 	proto string
+	html_title string
 }
 
 func (h Heuristic) check() bool {
@@ -135,6 +141,9 @@ func (h Heuristic) check_url(input Url) bool {
 		return false
 	}
 	if (h.proto != "") && (input.proto != h.proto) {
+		return false
+	}
+	if (h.html_title != "") && (input.html_title == h.html_title) {
 		return false
 	}
 	return true

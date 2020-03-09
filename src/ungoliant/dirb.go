@@ -162,6 +162,20 @@ func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 	if valid {
 		output.proto = check_proto
 	}
+	//check for consistent HTML title
+	check_html_title := canary_urls[0].html_title
+	valid = true	
+	for _,url := range canary_urls {
+		if url.html_title != check_html_title {
+			valid = false
+		}
+	}
+	if known_good.html_title == check_html_title {
+		valid = false
+	}
+	if valid {
+		output.html_title = check_html_title
+	}
 	//done
 	return output
 }
