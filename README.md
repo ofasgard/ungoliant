@@ -30,6 +30,7 @@ $ bin/ungoliant --help
 
 ## TODO
 
+- Sometimes when you run, it goes perfectly until NOT_FOUND detection - then goes through bruteforcing without making any requests and exits. Investigate.
 - Do more testing on representative examples.
 - Filter out identical hosts, maybe by checking title and resolving host/port?
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
