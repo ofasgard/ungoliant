@@ -2,7 +2,7 @@
 
 A webserver reconnaissance tool that proxies its results through Burp or ZAP.
 
-![example usage](https://user-images.githubusercontent.com/19550999/75923495-1bd2f100-5e5d-11ea-973e-82a628f6971e.png)
+![example usage](https://user-images.githubusercontent.com/19550999/76216776-18e35200-6209-11ea-93a4-50a2cc3bfb3a.png)
 
 Here's how it works:
 
@@ -11,7 +11,7 @@ Here's how it works:
 3. Ungoliant will look for HTTP/HTTPS webservers and enumerate them through the proxy you provided.
 4. When it's done, you can go to Burp/ZAP and run spiders or scans on the results.
 
-Ungoliant also logs its results to a few CSV files, so you can parse them yourself if you want.
+Ungoliant also logs its results to CSV, so you can parse it yourself if you want.
 
 ## Building
 
@@ -19,7 +19,7 @@ Ungoliant has the following dependencies:
 
 - golang.org/x/net/html
 
-To build it, just do:
+To fetch the dependencies and build the program, just do:
 
 ```shell
 $ git clone https://github.com/ofasgard/ungoliant
@@ -30,6 +30,8 @@ $ bin/ungoliant --help
 
 ## TODO
 
+- To avoid filling Burp/ZAP, run requests without the proxy and replay the passes at the end.
+- Filter out identical hosts, maybe by checking title and resolving host/port?
 - Do more testing on representative examples.
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.

@@ -100,13 +100,13 @@ func main() {
 	hosts := append(http_hosts, https_hosts...)
 	//Canary checks to ensure we can tell the difference between FOUND and NOT_FOUND pages.
 	fmt.Println("[+] Testing NOT_FOUND detection...")
-	checked_hosts := []Host{}
+	checked_hosts := []int{}
 	for index,host := range hosts {
 		known_good, canary_urls, err := canary_check(proxy, proxy_host, proxy_port, timeout, threads, host)
 		if err == nil {
 			hosts[index].heuristic = generate_heuristic(known_good, canary_urls)
 			if hosts[index].heuristic.check() {
-				checked_hosts = append(checked_hosts, hosts[index])
+				checked_hosts = append(checked_hosts, index)
 			}
 		}
 	}
@@ -114,24 +114,24 @@ func main() {
 	//If configured, use Google CSE to add some candidates to each host.
 	if (cx_key != "") && (cse_key != "") {
 		fmt.Println("[+] Providing Google CSE checks with the provided CSE and CX keys...")
-		for index,host := range checked_hosts {
+		for index,host := range hosts {
 			retrieved_urls,err := cse_search(cx_key, cse_key, "site:" + host.fqdn)
 			if err == nil {
 				for _,retrieved_url := range retrieved_urls {
-					checked_hosts[index].add_url(retrieved_url)
+					hosts[index].add_url(retrieved_url)
 				}
 			}
 		}
 	}
-	//Use the wordlist to generate candidates for each host, and begin bruteforcing.
-	for index,host := range checked_hosts {
-		fmt.Println("[+] Performing directory bruteforcing on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
-		checked_hosts[index].urls = generate_urls(host, wordlist)
-		checked_hosts[index].urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
-		checked_hosts[index].flush_urls()
+	//Use the wordlist to generate candidates for each checked host, and begin bruteforcing.
+	for current,index := range checked_hosts {
+		fmt.Println("[+] Performing directory bruteforcing on target " + strconv.Itoa(current+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
+		hosts[index].urls = generate_urls(hosts[index], wordlist)
+		hosts[index].urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, hosts[index].urls)
+		hosts[index].flush_urls()
 	}
 	//Write results to a file.
-	err = hosts_to_csv("results.csv", checked_hosts)
+	err = hosts_to_csv("results.csv", hosts)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to write final results to file: results.csv\n")
 	} else {
