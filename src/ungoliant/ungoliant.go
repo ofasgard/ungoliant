@@ -134,12 +134,9 @@ func main() {
 		fmt.Println("[+] Performing directory bruteforce on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
 		checked_hosts[index].urls = bruteforce(false, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
 		checked_hosts[index].flush_urls()
-	}
-	//Replay "good" results through the proxy.
-	if proxy {
-		fmt.Println("[+] Replaying requests through the proxy...")
-		for _,host := range checked_hosts {
-			bruteforce(true, proxy_host, proxy_port, timeout, threads, host.urls)
+		//Replay "good" results through the proxy.
+		if proxy {
+			bruteforce(true, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
 		}
 	}
 	//Write results to a file.
