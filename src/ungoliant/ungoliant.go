@@ -52,6 +52,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "[-] Failed to validate the proxy: %s:%d. Requests will not be recorded!\n", proxy_host, proxy_port)
 		proxy = false
 	} else {
+		fmt.Println("[+] Successfully contacted the proxy.")
 		resp.Body.Close()
 	}
 	//Attempt to read and parse the wordlist file.
@@ -102,7 +103,7 @@ func main() {
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
 	for index,host := range hosts {
-		known_good, canary_urls, err := canary_check(proxy, proxy_host, proxy_port, timeout, threads, host)
+		known_good, canary_urls, err := canary_check(false, proxy_host, proxy_port, timeout, threads, host)
 		if err == nil {
 			hosts[index].heuristic = generate_heuristic(known_good, canary_urls)
 			if hosts[index].heuristic.check() {
@@ -117,7 +118,7 @@ func main() {
 	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
 	//If configured, use Google CSE to add some candidates to each checked host.
 	if (cx_key != "") && (cse_key != "") {
-		fmt.Println("[+] Providing Google CSE checks with the provided CSE and CX keys...")
+		fmt.Println("[+] Performing Google CSE checks with the provided CSE and CX keys...")
 		for index,host := range checked_hosts {
 			retrieved_urls,err := cse_search(cx_key, cse_key, "site:" + host.fqdn)
 			if (err == nil) && (len(retrieved_urls) > 0) {
@@ -128,11 +129,18 @@ func main() {
 			}
 		}
 	}
-	//Begin bruteforcing checked hosts through the proxy.
+	//Begin bruteforcing checked hosts.
 	for index,_ := range checked_hosts {
 		fmt.Println("[+] Performing directory bruteforce on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
-		checked_hosts[index].urls = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
+		checked_hosts[index].urls = bruteforce(false, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
 		checked_hosts[index].flush_urls()
+	}
+	//Replay "good" results through the proxy.
+	if proxy {
+		fmt.Println("[+] Replaying requests through the proxy...")
+		for _,host := range checked_hosts {
+			bruteforce(true, proxy_host, proxy_port, timeout, threads, host.urls)
+		}
 	}
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)

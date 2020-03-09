@@ -30,8 +30,7 @@ $ bin/ungoliant --help
 
 ## TODO
 
-- To avoid filling Burp/ZAP, run requests without the proxy and replay the passes at the end.
-- Filter out identical hosts, maybe by checking title and resolving host/port?
 - Do more testing on representative examples.
+- Filter out identical hosts, maybe by checking title and resolving host/port?
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
