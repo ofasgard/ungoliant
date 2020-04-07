@@ -150,7 +150,9 @@ func isTitleElement(n *html.Node) bool {
 
 func traverse(n *html.Node) (string, bool) {
 	if isTitleElement(n) {
-		return n.FirstChild.Data, true
+		if n.FirstChild != nil {
+			return n.FirstChild.Data, true
+		}
 	}
 
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
