@@ -30,6 +30,7 @@ $ bin/ungoliant --help
 
 ## TODO
 
+- Add a "scan everything" option that doesn't care if a heuristic could be generated and uses results from the base URL.
 - Filter out identical hosts, maybe by checking title and resolving host/port?
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
