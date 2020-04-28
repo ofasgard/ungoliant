@@ -99,6 +99,19 @@ func main() {
 		fmt.Println("[!] Found " + strconv.Itoa(len(https_hosts)) + " HTTPS servers.")
 	}
 	hosts := append(http_hosts, https_hosts...)
+	//Take a screenshot of each web server if Chrome is installed.
+	chrome := check_chrome("")
+	if chrome != "" {
+		fmt.Println("[+] Found Chrome! Taking screenshots of identified web servers...")
+		create_dir("screenshots")
+		for _,host := range hosts {
+			filename := fmt.Sprintf("screenshots/%s-port-%d.png", host.fqdn, host.port)
+			err := screenshot(host.base_url(), filename, chrome)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "[-] Failed to take a screenshot: %s\n", err.Error())
+			}
+		}
+	}
 	//Canary checks to ensure we can tell the difference between FOUND and NOT_FOUND pages.
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}

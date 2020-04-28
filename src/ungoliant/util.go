@@ -6,8 +6,18 @@ import "strconv"
 import "math/rand"
 import "encoding/csv"
 
-//Generates a random string of determinate length.
+//Create a directory of it doesn't exist.
 
+func create_dir(name string) error {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(name, 0755)
+		return err
+	}
+	return nil
+}
+
+//Generate a random string of determinate length.
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
