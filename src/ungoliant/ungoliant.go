@@ -118,9 +118,12 @@ func main() {
 	for index,host := range hosts {
 		known_good, canary_urls, err := canary_check(false, proxy_host, proxy_port, timeout, threads, host)
 		if err == nil {
-			hosts[index].heuristic = generate_heuristic(known_good, canary_urls)
+			hosts[index].heuristic = generate_heuristic(known_good, canary_urls, false)
 			if hosts[index].heuristic.check() {
 				checked_hosts = append(checked_hosts, hosts[index])
+			} else {
+				hosts[index].heuristic = generate_heuristic(known_good, canary_urls, true)
+				if hosts[index].heuristic.check() { checked_hosts = append(checked_hosts, hosts[index]) }
 			}
 		}
 	}

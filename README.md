@@ -30,9 +30,10 @@ $ bin/ungoliant --help
 
 ## TODO
 
-- Finish screenshot functionality
-- Add a "scan everything" option that doesn't care if a heuristic could be generated and uses results from the base URL.
+- Test new fuzzy heuristics.
 - Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.
 - Filter out identical hosts, maybe by checking title and resolving host/port?
 - Add more configuration to web requests, such as a custom User Agent or Authentication headers.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
+
+Some kind of logic like... if no heuristic was found, just use a randomly generated URL for the heuristic

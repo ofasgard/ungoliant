@@ -108,14 +108,15 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, th
 }
 
 /*
-* generate_heuristic(known_good Url, canary_urls []Url) Heuristic
+* generate_heuristic(known_good Url, canary_urls []Url, fuzzy bool) Heuristic
 * 
 * Given the responses from canary_check(), attempt to generate a Heuristic object.
 * Checks if various attributes of each Url object are consistent between canary responses.
 * The Heuristic returned from this might be "blank" if none were found, so it should be checked with its check() method.
+* If the "fuzzy" flag is set, we don't compare it to "known good" URLs and just look for consistent NOT_FOUND results.
 */
 
-func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
+func generate_heuristic(known_good Url, canary_urls []Url, fuzzy bool) Heuristic {
 	output := Heuristic{}
 	if len(canary_urls) < 1 {
 		return output
@@ -128,9 +129,6 @@ func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 			valid = false
 		}
 	}
-	if known_good.statuscode == check_status {
-		valid = false
-	}
 	if valid {
 		output.statuscode = check_status
 	}
@@ -141,9 +139,6 @@ func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 		if url.header_server != check_server {
 			valid = false
 		}
-	}
-	if known_good.header_server == check_server {
-		valid = false
 	}
 	if valid {
 		output.header_server = check_server
@@ -156,9 +151,6 @@ func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 			valid = false
 		}
 	}
-	if known_good.proto == check_proto {
-		valid = false
-	}
 	if valid {
 		output.proto = check_proto
 	}
@@ -170,11 +162,15 @@ func generate_heuristic(known_good Url, canary_urls []Url) Heuristic {
 			valid = false
 		}
 	}
-	if known_good.html_title == check_html_title {
-		valid = false
-	}
 	if valid {
 		output.html_title = check_html_title
+	}
+	//compare to the "known good" URL and discard any results that match
+	if !fuzzy {
+		if output.statuscode == known_good.statuscode { output.statuscode = 0 }
+		if output.header_server == known_good.header_server { output.header_server = "" }
+		if output.proto == known_good.proto { output.proto = "" }
+		if output.html_title == known_good.html_title { output.html_title = "" }
 	}
 	//done
 	return output
