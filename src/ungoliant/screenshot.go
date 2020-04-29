@@ -8,7 +8,7 @@ import "fmt"
 
 func screenshot(url string, filepath string, chromepath string) error {
 	//prepare args
-	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", fmt.Sprintf("--screenshot=%s", filepath), url}
+	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", "--window-size=1600,900", fmt.Sprintf("--screenshot=%s", filepath), url}
 	if os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
