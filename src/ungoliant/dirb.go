@@ -42,7 +42,7 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 				host.urls[index].retrieve(true, proxy_host, proxy_port, timeout)
 			}
 		}
-		fmt.Printf("[!] Finished bruteforcing %s:%d\n", host.fqdn, host.port)
+		fmt.Printf("[!] Finished %s:%d\n", host.fqdn, host.port)
 		results <- host
 	}
 }

@@ -34,5 +34,3 @@ For some features like screenshots and Google dorking, you'll need to have Googl
 
 - Test parallelisation features.
 - Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.
-- Implement some actual spidering within the tool before passing it over to Burp/ZAP.
-

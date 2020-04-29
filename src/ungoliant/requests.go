@@ -22,10 +22,10 @@ func basic_request(request_url string, timeout int, use_https bool) (*http.Respo
 	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
-	req.Close = true
 	if err != nil {
 		return &http.Response{},err
 	}
+	req.Close = true
 	resp,err := client.Do(req)
 	if err != nil {
 		return &http.Response{},err

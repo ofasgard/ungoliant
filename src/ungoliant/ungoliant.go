@@ -153,6 +153,34 @@ func main() {
 	//Begin bruteforcing checked hosts.
 	fmt.Println("[+] Performing directory bruteforce on targets... please watch Burp/ZAP for progress.")
 	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
+	fmt.Println("[!] Done.")
+	//If Chrome is installed, do some scraping to identify more URLs.
+	if chrome != "" {		
+		fmt.Println("[+] Found Chrome! Attempting to scrape identified pages...")
+		scraped_hosts := []Host{}
+		for _,host := range checked_hosts {
+			new_host := Host{}
+			new_host.init(host.fqdn, host.port, host.https)
+			new_host.heuristic = host.heuristic
+			for _,url := range host.urls {
+				absolute_links,relative_links,err := scrape_url(url.url, host.fqdn, chrome)
+				if err == nil {
+					for _,link := range absolute_links {
+						new_host.add_url(link)
+					}
+					for _,uri := range relative_links {
+						link := new_host.base_url() + uri
+						new_host.add_url(link)
+					}
+				}
+				
+			}
+			scraped_hosts = append(scraped_hosts, new_host)
+		}
+		scraped_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, scraped_hosts)
+		checked_hosts = append(scraped_hosts, checked_hosts...)
+		fmt.Println("[!] Done.")
+	}
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
@@ -161,8 +189,10 @@ func main() {
 		fmt.Println("[*] Wrote the webserver results to file: results.csv")
 	}
 	//Done!
-	fmt.Println("[+] Finished! Now you can spider and scan the results through Burp/ZAP.")
+	fmt.Println("[+] Finished! Now you can scan the results through Burp/ZAP.")
 }
+
+//scrape=heuristic
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
