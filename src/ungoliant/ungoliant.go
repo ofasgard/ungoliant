@@ -14,14 +14,10 @@ func main() {
 	var thread_ptr = flag.Int("threads", 3, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
-	var cx_ptr = flag.String("cse-key", "", "")
-	var cse_ptr = flag.String("cx-key", "", "")
 	flag.Parse()
 	threads := *thread_ptr
 	timeout := *timeout_ptr
 	wordlist_path := *wordlist_ptr
-	cx_key := *cx_ptr
-	cse_key := *cse_ptr
 	//Check we have enough positional arguments.
 	if flag.NArg() != 3 {
 		usage()
@@ -55,6 +51,8 @@ func main() {
 		fmt.Println("[+] Successfully contacted the proxy.")
 		resp.Body.Close()
 	}
+	//Check for Chrome.
+	chrome := check_chrome("")
 	//Attempt to read and parse the wordlist file.
 	fd,err := os.Open(wordlist_path)
 	if err != nil {
@@ -100,7 +98,6 @@ func main() {
 	}
 	hosts := append(http_hosts, https_hosts...)
 	//Take a screenshot of each web server if Chrome is installed.
-	chrome := check_chrome("")
 	if chrome != "" {
 		fmt.Println("[+] Found Chrome! Taking screenshots of identified web servers...")
 		create_dir("screenshots")
@@ -127,19 +124,22 @@ func main() {
 			}
 		}
 	}
+	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
 	//Use wordlist to generate candidates for each checked host.
 	for i,_ := range checked_hosts {
 		checked_hosts[i].urls = generate_urls(checked_hosts[i], wordlist)
 	}
-	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
-	//If configured, use Google CSE to add some candidates to each checked host.
-	if (cx_key != "") && (cse_key != "") {
-		fmt.Println("[+] Performing Google CSE checks with the provided CSE and CX keys...")
+	//Do some Google dorking to add candidates, if Chrome is installed.
+	if chrome != "" {
+		fmt.Println("[+] Found Chrome! Attempting to Google dork each host...")
 		for index,host := range checked_hosts {
-			retrieved_urls,err := cse_search(cx_key, cse_key, "site:" + host.fqdn)
-			if (err == nil) && (len(retrieved_urls) > 0) {
-				fmt.Println("[!] Retrieved " + strconv.Itoa(len(retrieved_urls)) + " URLS.")
-				for _,retrieved_url := range retrieved_urls {
+			urls,err := chrome_dork(host.fqdn, 5)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Google dorking failed on %s: %s\n", host.fqdn, err.Error())
+			}
+			if len(urls) > 0 {
+				fmt.Printf("[!] Retrieved %d URLs for %s.\n", len(urls), host.fqdn)
+				for _,retrieved_url := range urls {
 					checked_hosts[index].add_url(retrieved_url)
 				}
 			}
@@ -172,7 +172,5 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
-	fmt.Fprintf(os.Stderr, "\t--cx-key <key>\t\tA Google Custom Search Engine CX key.\n")
-	fmt.Fprintf(os.Stderr, "\t--cse-key <key>\t\tA Google Custom Search Engine API key.\n")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
