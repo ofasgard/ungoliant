@@ -7,6 +7,7 @@ import "context"
 import "fmt"
 import "bytes"
 import "net/url"
+import "errors"
 
 /* UTILITY FUNCTIONS */
 
@@ -35,6 +36,18 @@ func check_chrome(chromepath string) string {
 		}
 	}
 	return ""
+}
+
+func check_google_blocked(url string) bool {
+	//checks if we are being blocked by Google
+	res,err := basic_request(url, 5, true)
+	if err != nil {
+		return false //we're not blocked, we just can't connect
+	}
+	if res.StatusCode == 503 {
+		return true //blocked!
+	}
+	return false
 }
 
 /* SCREENSHOT FUNCTIONALITY */
@@ -115,5 +128,11 @@ func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error)
 		if page == page_max { break }
 		page++
 	}
-	return output,nil
+	//did we break because we're done, or because of a captcha?
+	var err error
+	check_url := fmt.Sprintf("https://www.google.co.uk/search?q=site:%s&start=%d", fqdn, page * 10)
+	if check_google_blocked(check_url) {
+		err = errors.New("503 detected - Google is probably blocking you.")
+	}
+	return output,err
 }

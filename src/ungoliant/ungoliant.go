@@ -140,6 +140,7 @@ func main() {
 			urls,err := chrome_dork(chrome, host.fqdn, dork_depth)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Google dorking failed on %s: %s\n", host.fqdn, err.Error())
+				break
 			}
 			if len(urls) > 0 {
 				fmt.Printf("[!] Retrieved %d URLs for %s.\n", len(urls), host.fqdn)
