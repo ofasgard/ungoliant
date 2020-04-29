@@ -44,6 +44,7 @@ func check_google_blocked(url string) bool {
 	if err != nil {
 		return false //we're not blocked, we just can't connect
 	}
+	defer res.Body.Close()
 	if res.StatusCode == 503 {
 		return true //blocked!
 	}
@@ -114,8 +115,8 @@ func chrome_get_urls(dom string, fqdn string) ([]string, error) {
 }
 
 func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error) {
+	//automatically perform Google dorking to get links associated with an FQDN
 	output := []string{}
-	//automatically perform Google dorking on an FQDN
 	page := 0
 	for {
 		target := fmt.Sprintf("https://www.google.co.uk/search?q=site:%s&start=%d", fqdn, page * 10)
@@ -136,3 +137,7 @@ func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error)
 	}
 	return output,err
 }
+
+
+
+
