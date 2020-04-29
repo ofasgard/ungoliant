@@ -55,7 +55,7 @@ func check_google_blocked(url string) bool {
 
 func screenshot(url string, filepath string, chromepath string) error {
 	//takes a screenshot of a specified URL using headless Chrome
-	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", "--window-size=1600,900", fmt.Sprintf("--screenshot=%s", filepath)}
+	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", "--window-size=1600,900", "--virtual-time-budget=10000", fmt.Sprintf("--screenshot=%s", filepath)}
 	if os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
@@ -78,7 +78,7 @@ func screenshot(url string, filepath string, chromepath string) error {
 
 func chrome_request(url string, chromepath string) (string,error) {
 	//makes a request and dumps the DOM using headless Chrome
-	args := []string{"--headless", "--disable-gpu", "--disable-crash-reporter", "--window-size=1600,900", "--dump-dom"}
+	args := []string{"--headless", "--disable-gpu", "--disable-crash-reporter", "--window-size=1600,900", "--virtual-time-budget=10000", "--dump-dom"}
 	if os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
@@ -106,7 +106,7 @@ func chrome_get_urls(dom string, fqdn string) ([]string, error) {
 	for _,link := range urls {
 		parsed,err := url.Parse(link)
 		if err == nil {
-			if parsed.Hostname() == fqdn {
+			if (parsed.Hostname() == fqdn) {
 				output = append(output, link)
 			}
 		}
