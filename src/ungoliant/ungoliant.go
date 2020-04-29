@@ -14,10 +14,14 @@ func main() {
 	var thread_ptr = flag.Int("threads", 3, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
+	var dork_ptr = flag.Int("dork-depth", 3, "")
+	var chrome_ptr = flag.String("chrome-path", "", "")
 	flag.Parse()
 	threads := *thread_ptr
 	timeout := *timeout_ptr
 	wordlist_path := *wordlist_ptr
+	dork_depth := *dork_ptr
+	chrome_path := *chrome_ptr
 	//Check we have enough positional arguments.
 	if flag.NArg() != 3 {
 		usage()
@@ -52,7 +56,7 @@ func main() {
 		resp.Body.Close()
 	}
 	//Check for Chrome.
-	chrome := check_chrome("")
+	chrome := check_chrome(chrome_path)
 	//Attempt to read and parse the wordlist file.
 	fd,err := os.Open(wordlist_path)
 	if err != nil {
@@ -133,7 +137,7 @@ func main() {
 	if chrome != "" {
 		fmt.Println("[+] Found Chrome! Attempting to Google dork each host...")
 		for index,host := range checked_hosts {
-			urls,err := chrome_dork(host.fqdn, 5)
+			urls,err := chrome_dork(chrome, host.fqdn, dork_depth)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Google dorking failed on %s: %s\n", host.fqdn, err.Error())
 			}
@@ -172,5 +176,8 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
+	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]")
+	fmt.Fprintf(os.Stderr, "\t--chrome-path <path>\tManually specify the location of the Chrome executable (used for screenshots and dorking).")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
+

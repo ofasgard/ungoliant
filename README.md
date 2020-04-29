@@ -32,7 +32,6 @@ For some features like screenshots and Google dorking, you'll need to have Googl
 
 ## TODO
 
-- Make google "dork depth" configurable via commandline switch.
 - Add automatic captcha detection to google dork functionality to avoid useless requests.
 - Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.
 - Filter out identical hosts, maybe by checking title and resolving host/port?

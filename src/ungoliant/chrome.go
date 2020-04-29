@@ -7,7 +7,6 @@ import "context"
 import "fmt"
 import "bytes"
 import "net/url"
-import "errors"
 
 /* UTILITY FUNCTIONS */
 
@@ -101,17 +100,13 @@ func chrome_get_urls(dom string, fqdn string) ([]string, error) {
 	return output,nil
 }
 
-func chrome_dork(fqdn string, page_max int) ([]string, error) {
+func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error) {
 	output := []string{}
 	//automatically perform Google dorking on an FQDN
-	chrome := check_chrome("")
-	if chrome == "" {
-		return output,errors.New("Could not find Chrome!")
-	}
 	page := 0
 	for {
 		target := fmt.Sprintf("https://www.google.co.uk/search?q=site:%s&start=%d", fqdn, page * 10)
-		dom,err := chrome_request(target, chrome)
+		dom,err := chrome_request(target, chromepath)
 		if err != nil { break }
 		res,err := chrome_get_urls(dom, fqdn)
 		if err != nil { break }
