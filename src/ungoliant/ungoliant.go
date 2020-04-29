@@ -176,8 +176,8 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
-	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]")
-	fmt.Fprintf(os.Stderr, "\t--chrome-path <path>\tManually specify the location of the Chrome executable (used for screenshots and dorking).")
+	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
+	fmt.Fprintf(os.Stderr, "\t--chrome-path <path>\tManually specify the location of the Chrome executable (used for screenshots and dorking).\n")
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
 
