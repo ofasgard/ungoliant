@@ -1,6 +1,7 @@
 package main
 
 import "sync"
+import "fmt"
 
 /*
 * generate_urls(target Host, wordlist []string) Host
@@ -33,7 +34,7 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 			//initial bruteforce
 			host.urls[index].retrieve(false, proxy_host, proxy_port, timeout)
 		}
-		//flush URLs do only "good" URLs remain
+		//flush URLs so only "good" URLs remain
 		host.flush_urls()
 		if proxy {
 			for index,_ := range host.urls {
@@ -41,6 +42,7 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 				host.urls[index].retrieve(true, proxy_host, proxy_port, timeout)
 			}
 		}
+		fmt.Printf("[!] Finished bruteforcing %s:%d\n", host.fqdn, host.port)
 		results <- host
 	}
 }
@@ -66,7 +68,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 		job_lists[index] = append(job_lists[index], hosts[0])
 		hosts = hosts[1:]
 		index += 1
-		if index == threads {
+		if index > threads {
 			index = 0
 		}
 	}
@@ -99,14 +101,14 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 
 
 /*
-* canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) (Url,[]Url)
+* canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, target Host) (Url,[]Url)
 *
 * Given a Host object and some request parameters, do a "canary check" on the webserver.
 * Request the base URL and 5 randomly-generated URLs.
 * Returns the retrieved URLs.
 */
 
-func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) (Url,[]Url,error) {
+func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, target Host) (Url,[]Url,error) {
 	base_url := Url{}
 	base_url.init(target.base_url(), target.https)
 	canary_wordlist := []string{}

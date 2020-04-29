@@ -117,7 +117,7 @@ func main() {
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
 	for index,host := range hosts {
-		known_good, canary_urls, err := canary_check(false, proxy_host, proxy_port, timeout, threads, host)
+		known_good, canary_urls, err := canary_check(false, proxy_host, proxy_port, timeout, host)
 		if err == nil {
 			hosts[index].heuristic = generate_heuristic(known_good, canary_urls, false)
 			if hosts[index].heuristic.check() {
@@ -167,7 +167,7 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 10]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of hosts to scan at once. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
