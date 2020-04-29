@@ -32,6 +32,7 @@ For some features like screenshots and Google dorking, you'll need to have Googl
 
 ## TODO
 
+- Parallel host bruteforcing. Why are we only scanning one host at a time?
 - Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.
 - Implement some actual spidering within the tool before passing it over to Burp/ZAP.
 
