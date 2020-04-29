@@ -19,40 +19,52 @@ func generate_urls(target Host, wordlist []string) []Url {
 }
 
 /*
-* bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup)
+* bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Host, results chan Host, wg *sync.WaitGroup)
 *
 * Worker function for directory bruteforcing.
-* Takes URLs as input and retrieves them.
-* The retrieved URLs are returned as output.
+* Takes Hosts as input and retrieves all URLs associated with them.
+* The completed Hosts are returned as output.
 */
 
-func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Url, results chan Url, wg *sync.WaitGroup) {
+func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
 	defer wg.Done()
-	for job := range jobs {
-		job.retrieve(proxy, proxy_host, proxy_port, timeout)
-		results <- job
+	for host := range jobs {
+		for index,_ := range host.urls {
+			//initial bruteforce
+			host.urls[index].retrieve(false, proxy_host, proxy_port, timeout)
+		}
+		//flush URLs do only "good" URLs remain
+		host.flush_urls()
+		if proxy {
+			for index,_ := range host.urls {
+				//replay results through proxy
+				host.urls[index].retrieve(true, proxy_host, proxy_port, timeout)
+			}
+		}
+		results <- host
 	}
 }
 
 /*
-* bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url 
+* bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, hosts []Host) []Host
 *
 * Worker management function for threaded directory bruteforcing.
-* Returns a []Url containing the URLs retrieved by the worker processes.
+* Returns a []Host containing the updated hosts after bruteforcing completes.
 */
 
-func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, urls []Url) []Url {
-	output := []Url{}
-	//divide the urls up into equally sized job lists
-	job_lists := [][]Url{}
+func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, hosts []Host) []Host {
+	output := []Host{}
+	//create a number of job lists equal to your thread cap
+	job_lists := [][]Host{}
 	for len(job_lists) < threads {
-		new_list := []Url {}
+		new_list := []Host {}
 		job_lists = append(job_lists, new_list)
 	}
+	//divide the Hosts equally between the job lists
 	index := 0
-	for len(urls) > 0 {
-		job_lists[index] = append(job_lists[index], urls[0])
-		urls = urls[1:]
+	for len(hosts) > 0 {
+		job_lists[index] = append(job_lists[index], hosts[0])
+		hosts = hosts[1:]
 		index += 1
 		if index == threads {
 			index = 0
@@ -60,15 +72,15 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	}
 	//assign workers to each job list
 	var wg sync.WaitGroup
-	result_list := []chan Url{}
+	result_list := []chan Host{}
 	result_counts := []int{}
 	for _,list := range job_lists {
 		wg.Add(1)
-		jobs := make(chan Url, len(list))
-		results := make(chan Url, len(list))
+		jobs := make(chan Host, len(list))
+		results := make(chan Host, len(list))
 		go bruteforce_worker(proxy, proxy_host, proxy_port, timeout, jobs, results, &wg)
-		for _,url := range list {
-			jobs <- url
+		for _,host := range list {
+			jobs <- host
 		}
 		close(jobs)
 		result_list = append(result_list, results)
@@ -76,7 +88,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	}
 	//wait for all workers to return
 	for index,results := range result_list {
-		for a := 0; a < result_counts[index]; a++ {
+		for a:=0; a < result_counts[index]; a++ {
 			res := <- results
 			output = append(output, res)
 		}
@@ -84,6 +96,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	wg.Wait()
 	return output
 }
+
 
 /*
 * canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, target Host) (Url,[]Url)
@@ -101,10 +114,12 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, th
 		candidate := random_string(10)
 		canary_wordlist = append(canary_wordlist, candidate)
 	}
+	base_url.retrieve(proxy, proxy_host, proxy_port, timeout)
 	target.urls = generate_urls(target, canary_wordlist)
-	known_good := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, []Url{base_url})
-	canary_urls := bruteforce(proxy, proxy_host, proxy_port, timeout, threads, target.urls[1:])
-	return known_good[0], canary_urls, known_good[0].err
+	for index,_ := range target.urls {
+		target.urls[index].retrieve(proxy, proxy_host, proxy_port, timeout)
+	}
+	return base_url, target.urls[1:], base_url.err
 }
 
 /*

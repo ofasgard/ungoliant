@@ -11,7 +11,7 @@ func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
 	//Parse flags and input.
 	flag.Usage = usage
-	var thread_ptr = flag.Int("threads", 3, "")
+	var thread_ptr = flag.Int("threads", 10, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
 	var dork_ptr = flag.Int("dork-depth", 3, "")
@@ -151,15 +151,8 @@ func main() {
 		}
 	}
 	//Begin bruteforcing checked hosts.
-	for index,_ := range checked_hosts {
-		fmt.Println("[+] Performing directory bruteforce on target " + strconv.Itoa(index+1) + " of " + strconv.Itoa(len(checked_hosts)) + ".")
-		checked_hosts[index].urls = bruteforce(false, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
-		checked_hosts[index].flush_urls()
-		//Replay "good" results through the proxy.
-		if proxy {
-			bruteforce(true, proxy_host, proxy_port, timeout, threads, checked_hosts[index].urls)
-		}
-	}
+	fmt.Println("[+] Performing directory bruteforce on targets... please watch Burp/ZAP for progress.")
+	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
@@ -174,7 +167,7 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 3]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe number of threads to use when spidering. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
