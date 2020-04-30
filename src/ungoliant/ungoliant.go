@@ -218,7 +218,7 @@ func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string
 	if proxy {
 		fmt.Fprintf(os.Stdout, "\t[Proxy] %s:%d\n", proxy_host, proxy_port)
 	} else {
-		fmt.Fprintf(os.Stdout, "\t[Proxy] FAILED")
+		fmt.Fprintf(os.Stdout, "\t[Proxy] FAILED\n")
 	}
 	fmt.Fprintf(os.Stdout, "\t[Wordlist] %d words\n", wordlist_len)
 	fmt.Fprintf(os.Stdout, "\t[Max parallel hosts] %d\n", parallel_hosts)
