@@ -168,7 +168,7 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, ta
 	for index,_ := range target.urls {
 		target.urls[index].retrieve(proxy, proxy_host, proxy_port, timeout)
 	}
-	return base_url, target.urls[1:], base_url.err
+	return base_url, target.urls, base_url.err
 }
 
 /*

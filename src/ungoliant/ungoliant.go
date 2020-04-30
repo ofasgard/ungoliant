@@ -7,9 +7,12 @@ import "flag"
 import "strconv"
 import "strings"
 import "time"
+import "math/rand"
 
 func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
+	//Generate seed for random operations (just used for 404 URLs, pseudo-randomness is acceptable).
+	rand.Seed(time.Now().UnixNano())
 	//Parse flags and input.
 	flag.Usage = usage
 	var parallel_ptr = flag.Int("parallel-hosts", 10, "")
@@ -209,7 +212,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--chrome-path <path>\tManually specify the location of the Chrome executable (used for screenshots and dorking).\n")
-	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "\nExample: %s --timeout 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
 
 func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string, wordlist_len int, parallel_hosts int, threads int, timeout int, start_time time.Time) {

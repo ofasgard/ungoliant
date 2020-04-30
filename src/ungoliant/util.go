@@ -1,7 +1,6 @@
 package main
 
 import "os"
-import "time"
 import "strconv"
 import "math/rand"
 import "encoding/csv"
@@ -22,7 +21,6 @@ func create_dir(name string) error {
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func random_string(length int) string {
-	rand.Seed(time.Now().UnixNano())
 	b := make([]rune, length)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
