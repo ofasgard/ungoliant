@@ -6,6 +6,7 @@ import "io/ioutil"
 import "flag"
 import "strconv"
 import "strings"
+import "time"
 
 func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
@@ -70,8 +71,9 @@ func main() {
 		return
 	}
 	wordlist := strings.Split(string(wordlist_data), "\n")
-	//Print a summary of configuration info.
-	config_summary(proxy, proxy_host, proxy_port, chrome, len(wordlist), parallel_hosts, threads, timeout)
+	//Measure start time & print a summary of configuration info.
+	start_time := time.Now()
+	config_summary(proxy, proxy_host, proxy_port, chrome, len(wordlist), parallel_hosts, threads, timeout, start_time)
 	//Attempt to read and parse the Nmap file.
 	fmt.Println("[+] Parsing '" + nmap_path + "'...")
 	fd,err = os.Open(nmap_path)
@@ -159,7 +161,6 @@ func main() {
 	//Begin bruteforcing checked hosts.
 	fmt.Println("[+] Performing directory bruteforce on targets...")
 	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
-	fmt.Println("[!] Done.")
 	//If Chrome is installed, do some scraping to identify more URLs.
 	if chrome != "" {		
 		fmt.Println("[+] Attempting to scrape identified pages...")
@@ -185,7 +186,6 @@ func main() {
 		}
 		scraped_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, scraped_hosts)
 		checked_hosts = append(scraped_hosts, checked_hosts...)
-		fmt.Println("[!] Done.")
 	}
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
@@ -195,7 +195,9 @@ func main() {
 		fmt.Println("[*] Wrote the webserver results to file: results.csv")
 	}
 	//Done!
-	fmt.Println("[+] Finished! Now you can scan the results through Burp/ZAP.")
+	finish_time := time.Now()
+	duration := finish_time.Sub(start_time)
+	fmt.Fprintf(os.Stdout, "[+] Finished! Total elapsed time: %s\n", duration.Round(time.Second).String())
 }
 
 func usage() {
@@ -210,22 +212,23 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\nExample: %s -t 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
 
-func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string, wordlist_len int, parallel_hosts int, threads int, timeout int) {
+func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string, wordlist_len int, parallel_hosts int, threads int, timeout int, start_time time.Time) {
 	fmt.Fprintf(os.Stdout, "\n")
+	fmt.Fprintf(os.Stdout, "\t[Start time] %s\n", start_time.Format("2 Jan 2006 15:04:05"))
 	if proxy {
-		fmt.Fprintf(os.Stdout, "\tProxy: %s:%d\n", proxy_host, proxy_port)
+		fmt.Fprintf(os.Stdout, "\t[Proxy] %s:%d\n", proxy_host, proxy_port)
 	} else {
-		fmt.Fprintf(os.Stdout, "\tProxy: FAILED")
+		fmt.Fprintf(os.Stdout, "\t[Proxy] FAILED")
 	}
-	fmt.Fprintf(os.Stdout, "\tWordlist: %d words\n", wordlist_len)
-	fmt.Fprintf(os.Stdout, "\tMax parallel hosts: %d\n", parallel_hosts)
-	fmt.Fprintf(os.Stdout, "\tThreads per host: %d\n", threads)
-	fmt.Fprintf(os.Stdout, "\tMax possible threads: %d\n", (parallel_hosts * threads))
-	fmt.Fprintf(os.Stdout, "\tRequest timeout: %d seconds\n", timeout)
+	fmt.Fprintf(os.Stdout, "\t[Wordlist] %d words\n", wordlist_len)
+	fmt.Fprintf(os.Stdout, "\t[Max parallel hosts] %d\n", parallel_hosts)
+	fmt.Fprintf(os.Stdout, "\t[Threads per host] %d\n", threads)
+	fmt.Fprintf(os.Stdout, "\t[Max possible threads] %d\n", (parallel_hosts * threads))
+	fmt.Fprintf(os.Stdout, "\t[Request timeout] %d seconds\n", timeout)
 	if chrome == "" {
-		fmt.Fprintf(os.Stdout, "\tChrome Path: NOT FOUND\n")
+		fmt.Fprintf(os.Stdout, "\t[Chrome Path] NOT FOUND\n")
 	} else {
-		fmt.Fprintf(os.Stdout, "\tChrome Path: %s\n", chrome)
+		fmt.Fprintf(os.Stdout, "\t[Chrome Path] %s\n", chrome)
 	}
 	fmt.Fprintf(os.Stdout, "\n")
 }
