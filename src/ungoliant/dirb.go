@@ -19,46 +19,93 @@ func generate_urls(target Host, wordlist []string) []Url {
 	return target.urls
 }
 
+/* request_worker (proxy bool, proxy_host string, proxy_port int, timeout int, urls []*Url, wg *sync.WaitGroup)
+*
+* Worker function for retrieving individual URLs.
+* Simply give it a list of pointers to Url objects, and it retrieves them.
+*/
+
+func request_worker(proxy bool, proxy_host string, proxy_port int, timeout int, urls []*Url, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for index,_ := range urls {
+		urls[index].retrieve(proxy, proxy_host, proxy_port, timeout)
+	}
+}
+
 /*
-* bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Host, results chan Host, wg *sync.WaitGroup)
+* bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, threads int, jobs chan Host, results chan Host, wg *sync.WaitGroup)
 *
 * Worker function for directory bruteforcing.
 * Takes Hosts as input and retrieves all URLs associated with them.
 * The completed Hosts are returned as output.
 */
 
-func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
+func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout int, threads int, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
 	defer wg.Done()
+	var request_wg sync.WaitGroup
 	for host := range jobs {
-		for index,_ := range host.urls {
-			//initial bruteforce
-			host.urls[index].retrieve(false, proxy_host, proxy_port, timeout)
+		//create job lists
+		job_lists := [][]*Url{}
+		for len(job_lists) < threads {
+			job_lists = append(job_lists, []*Url{})
 		}
-		//flush URLs so only "good" URLs remain
-		host.flush_urls()
-		if proxy {
-			for index,_ := range host.urls {
-				//replay results through proxy
-				host.urls[index].retrieve(true, proxy_host, proxy_port, timeout)
+		//populate job lists with URLs
+		i := 0
+		for index,_ := range host.urls {
+			job_lists[i] = append(job_lists[i], &host.urls[index])
+			i++
+			if i == threads {
+				i = 0
 			}
 		}
+		//create jobs
+		for index,_ := range job_lists {
+			request_wg.Add(1)
+			go request_worker(false, proxy_host, proxy_port, timeout, job_lists[index], &request_wg)
+		}
+		//wait for jobs to complete and flush URLs
+		request_wg.Wait()
+		host.flush_urls()
+		//if the proxy is enabled, we need to replay any good URLs through the proxy
+		//create job lists
+		job_lists = [][]*Url{}
+		for len(job_lists) < threads {
+			job_lists = append(job_lists, []*Url{})
+		}
+		//populate job lists with URLs
+		i = 0
+		for index,_ := range host.urls {
+			job_lists[i] = append(job_lists[i], &host.urls[index])
+			i++
+			if i == threads {
+				i = 0
+			}
+		}
+		//create jobs
+		for index,_ := range job_lists {
+			request_wg.Add(1)
+			go request_worker(true, proxy_host, proxy_port, timeout, job_lists[index], &request_wg)
+		}
+		//wait for jobs to complete
+		request_wg.Wait()
+		//return
 		fmt.Printf("[!] Finished %s:%d\n", host.fqdn, host.port)
 		results <- host
 	}
 }
 
 /*
-* bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, hosts []Host) []Host
+* bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, parallel_hosts int, threads int, hosts []Host) []Host
 *
 * Worker management function for threaded directory bruteforcing.
 * Returns a []Host containing the updated hosts after bruteforcing completes.
 */
 
-func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, hosts []Host) []Host {
+func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, parallel_hosts int, threads int, hosts []Host) []Host {
 	output := []Host{}
-	//create a number of job lists equal to your thread cap
+	//create a number of job lists equal to your host cap
 	job_lists := [][]Host{}
-	for len(job_lists) < threads {
+	for len(job_lists) < parallel_hosts {
 		new_list := []Host {}
 		job_lists = append(job_lists, new_list)
 	}
@@ -68,7 +115,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 		job_lists[index] = append(job_lists[index], hosts[0])
 		hosts = hosts[1:]
 		index += 1
-		if index == threads {
+		if index == parallel_hosts {
 			index = 0
 		}
 	}
@@ -80,7 +127,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 		wg.Add(1)
 		jobs := make(chan Host, len(list))
 		results := make(chan Host, len(list))
-		go bruteforce_worker(proxy, proxy_host, proxy_port, timeout, jobs, results, &wg)
+		go bruteforce_worker(proxy, proxy_host, proxy_port, timeout, threads, jobs, results, &wg)
 		for _,host := range list {
 			jobs <- host
 		}

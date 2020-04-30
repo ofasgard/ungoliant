@@ -6,7 +6,7 @@ A web server reconnaissance tool designed to enumerate entire CIDR ranges at onc
 
 Here's how it works:
 
-1. Use Nmap with the -oX option to scan your targets and output the results to an XML file.
+1. Use Nmap with the -oX option to scan your targets and output the results to an XML file. Use the -n switch if you don't want to scan hostnames.
 2. Provide the XML file to ungoliant along with the proxy you want to pass requests through.
 3. Ungoliant will look for HTTP/HTTPS webservers and enumerate them through the proxy you provided.
 4. When it's done, you can go to Burp/ZAP and run spiders or scans on the results.
@@ -33,7 +33,6 @@ For some features like screenshots and Google dorking, you'll need to have Googl
 ## TODO
 
 - Measure time taken and print at the end.
-- Add threading to bruteforce requests to speed up host enumeration.
 - Update scraping/spidering to request directly instead of using Chrome.
 - Make scraping multithreaded.
 - Test performance on very large subnets.
