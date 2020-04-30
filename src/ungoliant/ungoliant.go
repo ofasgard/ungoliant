@@ -136,17 +136,21 @@ func main() {
 	//Do some Google dorking to add candidates, if Chrome is installed.
 	if chrome != "" {
 		fmt.Println("[+] Found Chrome! Attempting to Google dork each host...")
+		dorked_fqdns := []string{}
 		for index,host := range checked_hosts {
-			urls,err := chrome_dork(chrome, host.fqdn, dork_depth)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Google dorking failed on %s: %s\n", host.fqdn, err.Error())
-				break
-			}
-			if len(urls) > 0 {
-				fmt.Printf("[!] Retrieved %d URLs for %s.\n", len(urls), host.fqdn)
-				for _,retrieved_url := range urls {
-					checked_hosts[index].add_url(retrieved_url)
+			if !string_in_slice(dorked_fqdns, host.fqdn) {
+				urls,err := chrome_dork(chrome, host.fqdn, dork_depth)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "[-] Google dorking failed on %s: %s\n", host.fqdn, err.Error())
+					break
 				}
+				if len(urls) > 0 {
+					fmt.Printf("[!] Retrieved %d URLs for %s.\n", len(urls), host.fqdn)
+					for _,retrieved_url := range urls {
+						checked_hosts[index].add_url(retrieved_url)
+					}
+				}
+				dorked_fqdns = append(dorked_fqdns, host.fqdn)
 			}
 		}
 	}

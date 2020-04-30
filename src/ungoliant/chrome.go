@@ -8,6 +8,8 @@ import "fmt"
 import "bytes"
 import "net/url"
 import "errors"
+import "strings"
+import "io/ioutil"
 
 /* UTILITY FUNCTIONS */
 
@@ -47,6 +49,13 @@ func check_google_blocked(url string) bool {
 	defer res.Body.Close()
 	if res.StatusCode == 503 {
 		return true //blocked!
+	}
+	detect_string := "Our systems have detected unusual traffic from your computer network."
+	body, err := ioutil.ReadAll(res.Body)
+	if err == nil {
+		if strings.Contains(string(body), detect_string) {
+			return true //blocked!
+		}
 	}
 	return false
 }
@@ -133,7 +142,7 @@ func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error)
 	var err error
 	check_url := fmt.Sprintf("https://www.google.co.uk/search?q=site:%s&start=%d", fqdn, page * 10)
 	if check_google_blocked(check_url) {
-		err = errors.New("503 detected - Google is probably blocking you.")
+		err = errors.New("Google is probably blocking you.")
 	}
 	return output,err
 }

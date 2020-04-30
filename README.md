@@ -1,6 +1,6 @@
 # ungoliant
 
-A webserver reconnaissance tool that proxies its results through Burp or ZAP.
+A web server reconnaissance tool designed to enumerate entire CIDR ranges at once, and proxy the results through Burp or ZAP.
 
 ![example usage](https://user-images.githubusercontent.com/19550999/76216776-18e35200-6209-11ea-93a4-50a2cc3bfb3a.png)
 
@@ -32,5 +32,9 @@ For some features like screenshots and Google dorking, you'll need to have Googl
 
 ## TODO
 
-- Test parallelisation features.
+- Measure time taken and print at the end.
+- Add threading to bruteforce requests to speed up host enumeration.
+- Update scraping/spidering to request directly instead of using Chrome.
+- Make scraping multithreaded.
+- Test performance on very large subnets.
 - Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.

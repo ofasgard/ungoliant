@@ -30,10 +30,21 @@ func random_string(length int) string {
 	return string(b)
 }
 
-//Check if a slice contains an integer.
+//Check if a slice contains an value.
 
 func int_in_slice(list []int, search int) bool {
 	valid := make(map[int]bool)
+	for _,val := range list {
+		valid[val] = true
+	}
+	if valid[search] {
+		return true
+	}
+	return false
+}
+
+func string_in_slice(list []string, search string) bool {
+	valid := make(map[string]bool)
 	for _,val := range list {
 		valid[val] = true
 	}

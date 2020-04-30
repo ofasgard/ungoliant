@@ -68,7 +68,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 		job_lists[index] = append(job_lists[index], hosts[0])
 		hosts = hosts[1:]
 		index += 1
-		if index > threads {
+		if index == threads {
 			index = 0
 		}
 	}
@@ -131,6 +131,7 @@ func canary_check(proxy bool, proxy_host string, proxy_port int, timeout int, ta
 * Checks if various attributes of each Url object are consistent between canary responses.
 * The Heuristic returned from this might be "blank" if none were found, so it should be checked with its check() method.
 * If the "fuzzy" flag is set, we don't compare it to "known good" URLs and just look for consistent NOT_FOUND results.
+* From our perspective, false positives are preferable to false negatives, as the worst case scenario is that 404 results get passed to Burp/ZAP.
 */
 
 func generate_heuristic(known_good Url, canary_urls []Url, fuzzy bool) Heuristic {
