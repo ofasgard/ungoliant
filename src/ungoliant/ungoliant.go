@@ -173,7 +173,7 @@ func main() {
 			new_host.init(host.fqdn, host.port, host.https)
 			new_host.heuristic = host.heuristic
 			for _,url := range host.urls {
-				absolute_links,relative_links,err := scrape_url(url.url, host.fqdn, chrome)
+				absolute_links,relative_links,err := scrape_url(url.url, host.fqdn, timeout, url.https)
 				if err == nil {
 					for _,link := range absolute_links {
 						new_host.add_url(link)

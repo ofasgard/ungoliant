@@ -6,7 +6,6 @@ import "os/exec"
 import "context"
 import "fmt"
 import "bytes"
-import "net/url"
 import "errors"
 import "strings"
 import "io/ioutil"
@@ -108,21 +107,6 @@ func chrome_request(url string, chromepath string) (string,error) {
 	return output.String(),err
 }
 
-func chrome_get_urls(dom string, fqdn string) ([]string, error) {
-	//automatically parse and return URLs in a DOM that match the provided fqdn
-	output := []string{}
-	urls := get_html_urls(dom)
-	for _,link := range urls {
-		parsed,err := url.Parse(link)
-		if err == nil {
-			if (parsed.Hostname() == fqdn) {
-				output = append(output, link)
-			}
-		}
-	}
-	return output,nil
-}
-
 func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error) {
 	//automatically perform Google dorking to get links associated with an FQDN
 	output := []string{}
@@ -131,7 +115,7 @@ func chrome_dork(chromepath string, fqdn string, page_max int) ([]string, error)
 		target := fmt.Sprintf("https://www.google.co.uk/search?q=site:%s&start=%d", fqdn, page * 10)
 		dom,err := chrome_request(target, chromepath)
 		if err != nil { break }
-		res,err := chrome_get_urls(dom, fqdn)
+		res,err := get_fqdn_urls(dom, fqdn)
 		if err != nil { break }
 		if len(res) == 0 { break }
 		output = append(output, res...)
