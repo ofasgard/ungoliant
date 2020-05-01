@@ -64,7 +64,7 @@ func check_google_blocked(url string) bool {
 
 func screenshot(url string, filepath string, chromepath string) error {
 	//takes a screenshot of a specified URL using headless Chrome
-	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", "--window-size=1600,900", "--virtual-time-budget=3000", fmt.Sprintf("--screenshot=%s", filepath)}
+	args := []string{"--headless", "--disable-gpu", "--hide-scrollbars", "--disable-crash-reporter", "--ignore-certificate-errors", "--window-size=1600,900", "--virtual-time-budget=3000", fmt.Sprintf("--screenshot=%s", filepath)}
 	if os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
@@ -87,7 +87,7 @@ func screenshot(url string, filepath string, chromepath string) error {
 
 func chrome_request(url string, chromepath string) (string,error) {
 	//makes a request and dumps the DOM using headless Chrome
-	args := []string{"--headless", "--disable-gpu", "--disable-crash-reporter", "--window-size=1600,900", "--virtual-time-budget=3000", "--dump-dom"}
+	args := []string{"--headless", "--disable-gpu", "--disable-crash-reporter", "--ignore-certificate-errors", "--window-size=1600,900", "--virtual-time-budget=3000", "--dump-dom"}
 	if os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
