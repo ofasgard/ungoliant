@@ -93,9 +93,9 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	var resp *http.Response
 	var err error
 	if proxy {
-		resp, err = proxy_request(u.url, proxy_host, proxy_port, timeout, u.https)
+		resp, err = proxy_request(u.url, proxy_host, proxy_port, timeout)
 	} else {
-		resp, err = basic_request(u.url, timeout, u.https)
+		resp, err = basic_request(u.url, timeout)
 	}
 	if err != nil {
 		u.err = err

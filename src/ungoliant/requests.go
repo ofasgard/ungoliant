@@ -9,12 +9,12 @@ import "strconv"
 import "sync"
 
 /*
-* basic_request(request_url string, timeout int, use_https bool) (*http.Response,error)
+* basic_request(request_url string, timeout int) (*http.Response,error)
 *
 * Wrapper for a basic HTTP GET request. Returns a response and error value.
 */
 
-func basic_request(request_url string, timeout int, use_https bool) (*http.Response,error) {
+func basic_request(request_url string, timeout int) (*http.Response,error) {
 	//prepare client and request
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
@@ -32,12 +32,12 @@ func basic_request(request_url string, timeout int, use_https bool) (*http.Respo
 }
 
 /*
-* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error)
+* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int) (*http.Response,error)
 *
 * Make a request through the specified HTTP proxy. Returns a response and error value. Fails if the proxy is down.
 */
 
-func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int, use_https bool) (*http.Response,error) {
+func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int) (*http.Response,error) {
 	//prepare proxy URL
 	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
 	proxy_url,err := url.Parse(proxy_str)
@@ -75,7 +75,7 @@ func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, r
 		request_str := ""
 		if use_https { request_str += "https://" } else { request_str += "http://" }
 		request_str += job.fqdn + ":" + strconv.Itoa(job.port) + "/"
-		resp,err := basic_request(request_str, timeout, use_https)
+		resp,err := basic_request(request_str, timeout)
 		if err == nil {
 			defer resp.Body.Close()
 			job.init(job.fqdn, job.port, use_https)

@@ -41,7 +41,7 @@ func check_chrome(chromepath string) string {
 
 func check_google_blocked(url string) bool {
 	//checks if we are being blocked by Google
-	res,err := basic_request(url, 5, true)
+	res,err := basic_request(url, 5)
 	if err != nil {
 		return false //we're not blocked, we just can't connect
 	}

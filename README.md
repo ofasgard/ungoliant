@@ -30,8 +30,3 @@ $ bin/ungoliant --help
 
 For some features like screenshots and Google dorking, you'll need to have Google Chrome installed.
 
-## TODO
-
-- Make scraping multithreaded.
-- Test performance on very large subnets.
-- Expand screenshot functionality to auto-screenshot based on a keyword, i.e. "finance" in the HTML title or body.

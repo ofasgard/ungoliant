@@ -82,9 +82,9 @@ func get_fqdn_urls(dom string, fqdn string) ([]string, error) {
 
 //Function for actual scraping and link extraction.
 
-func scrape_url(url string, fqdn string, timeout int, https bool) ([]string,[]string,error) {
+func scrape_url(url string, fqdn string, timeout int) ([]string,[]string,error) {
 	//given a URL and an FQDN, scrape absolute and relative links on the page
-	res,err := basic_request(url, timeout, https)
+	res,err := basic_request(url, timeout)
 	if err != nil { return []string{},[]string{},err }
 	defer res.Body.Close()
 	dom,err := ioutil.ReadAll(res.Body)
