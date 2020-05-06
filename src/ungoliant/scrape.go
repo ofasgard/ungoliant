@@ -117,7 +117,8 @@ func scrape_worker(fqdn string, baseurl string, timeout int, jobs chan Url, resu
 	
 }
 
-func scrape_host(target *Host, timeout int, threads int) {
+func scrape_host(target *Host, timeout int, threads int, wg *sync.WaitGroup) {
+	defer wg.Done()
 	var scraper_wg sync.WaitGroup
 	//create job lists
 	job_lists := [][]Url{}
@@ -157,5 +158,25 @@ func scrape_host(target *Host, timeout int, threads int) {
 			}
 		}
 	}
+}
+
+func scrape(targets []Host, timeout int, parallel_hosts int, threads int) []Host {
+	//scrape_host(&checked_hosts[index], timeout, threads)
+	var wg sync.WaitGroup
+	//manage workers
+	workers := 0
+	index := 0
+	for index < len(targets) {
+		for (workers < parallel_hosts) && (index < len(targets)) {
+			wg.Add(1)
+			go scrape_host(&targets[index], timeout, threads, &wg)
+			workers++
+			index++
+		}
+		wg.Wait()
+		workers = 0
+	}
+	wg.Wait()
+	return targets
 }
 

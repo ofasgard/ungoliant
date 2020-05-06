@@ -166,9 +166,7 @@ func main() {
 	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
 	//Do some scraping to identify more URLs.
 	fmt.Println("[+] Attempting to scrape identified pages...")
-	for index,_ := range checked_hosts {
-		scrape_host(&checked_hosts[index], timeout, threads)
-	}
+	checked_hosts = scrape(checked_hosts, timeout, parallel_hosts, threads)
 	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
