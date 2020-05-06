@@ -71,6 +71,7 @@ type Url struct {
 	url string
 	https bool
 	retrieved bool
+	retrieved_proxy bool
 	err error
 	statuscode int
 	statustext string
@@ -84,12 +85,14 @@ func (u *Url) init(url string, https bool) {
 	u.url = url
 	u.https = https
 	u.retrieved = false
+	u.retrieved_proxy = false
 	u.err = nil
 }
 
 func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) {
 	//retrieve a URL via the proxy; this will set the "retrieved" flag regardless of whether it succeeds
 	u.retrieved = true
+	if proxy { u.retrieved_proxy = true }
 	var resp *http.Response
 	var err error
 	if proxy {

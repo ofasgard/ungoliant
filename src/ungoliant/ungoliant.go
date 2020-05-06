@@ -164,32 +164,12 @@ func main() {
 	//Begin bruteforcing checked hosts.
 	fmt.Println("[+] Performing directory bruteforce on targets...")
 	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
-	//If Chrome is installed, do some scraping to identify more URLs.
-	if chrome != "" {		
-		fmt.Println("[+] Attempting to scrape identified pages...")
-		scraped_hosts := []Host{}
-		for _,host := range checked_hosts {
-			new_host := Host{}
-			new_host.init(host.fqdn, host.port, host.https)
-			new_host.heuristic = host.heuristic
-			for _,url := range host.urls {
-				absolute_links,relative_links,err := scrape_url(url.url, host.fqdn, timeout)
-				if err == nil {
-					for _,link := range absolute_links {
-						new_host.add_url(link)
-					}
-					for _,uri := range relative_links {
-						link := new_host.base_url() + uri
-						new_host.add_url(link)
-					}
-				}
-				
-			}
-			scraped_hosts = append(scraped_hosts, new_host)
-		}
-		scraped_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, scraped_hosts)
-		checked_hosts = append(scraped_hosts, checked_hosts...)
+	//Do some scraping to identify more URLs.
+	fmt.Println("[+] Attempting to scrape identified pages...")
+	for index,_ := range checked_hosts {
+		scrape_host(&checked_hosts[index], timeout, threads)
 	}
+	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {

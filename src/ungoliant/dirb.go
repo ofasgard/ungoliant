@@ -44,6 +44,13 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 	defer wg.Done()
 	var request_wg sync.WaitGroup
 	for host := range jobs {
+		//create list of URLs that haven't been retrieved
+		targets := []*Url{}
+		for index,_ := range host.urls {
+			if !host.urls[index].retrieved {
+				targets = append(targets, &host.urls[index])
+			}
+		}
 		//create job lists
 		job_lists := [][]*Url{}
 		for len(job_lists) < threads {
@@ -51,8 +58,8 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 		}
 		//populate job lists with URLs
 		i := 0
-		for index,_ := range host.urls {
-			job_lists[i] = append(job_lists[i], &host.urls[index])
+		for index,_ := range targets {
+			job_lists[i] = append(job_lists[i], targets[index])
 			i++
 			if i == threads {
 				i = 0
@@ -67,27 +74,36 @@ func bruteforce_worker (proxy bool, proxy_host string, proxy_port int, timeout i
 		request_wg.Wait()
 		host.flush_urls()
 		//if the proxy is enabled, we need to replay any good URLs through the proxy
-		//create job lists
-		job_lists = [][]*Url{}
-		for len(job_lists) < threads {
-			job_lists = append(job_lists, []*Url{})
-		}
-		//populate job lists with URLs
-		i = 0
-		for index,_ := range host.urls {
-			job_lists[i] = append(job_lists[i], &host.urls[index])
-			i++
-			if i == threads {
-				i = 0
+		if proxy {
+			//create list of URLs that haven't been retrieved through proxy
+			targets = []*Url{}
+			for index,_ := range host.urls {
+				if (host.urls[index].retrieved) && (!host.urls[index].retrieved_proxy) {
+					targets = append(targets, &host.urls[index])
+				}
 			}
+			//create job lists
+			job_lists = [][]*Url{}
+			for len(job_lists) < threads {
+				job_lists = append(job_lists, []*Url{})
+			}
+			//populate job lists with URLs
+			i = 0
+			for index,_ := range targets {
+				job_lists[i] = append(job_lists[i], targets[index])
+				i++
+				if i == threads {
+					i = 0
+				}
+			}
+			//create jobs
+			for index,_ := range job_lists {
+				request_wg.Add(1)
+				go request_worker(true, proxy_host, proxy_port, timeout, job_lists[index], &request_wg)
+			}
+			//wait for jobs to complete
+			request_wg.Wait()
 		}
-		//create jobs
-		for index,_ := range job_lists {
-			request_wg.Add(1)
-			go request_worker(true, proxy_host, proxy_port, timeout, job_lists[index], &request_wg)
-		}
-		//wait for jobs to complete
-		request_wg.Wait()
 		//return
 		fmt.Printf("[!] Finished %s:%d\n", host.fqdn, host.port)
 		results <- host
