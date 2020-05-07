@@ -11,7 +11,7 @@ import "math/rand"
 
 func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
-	//Generate seed for random operations (just used for 404 URLs, pseudo-randomness is acceptable).
+	//Generate seed for random operations (pseudo-randomness is acceptable in this use case).
 	rand.Seed(time.Now().UnixNano())
 	//Parse flags and input.
 	flag.Usage = usage
@@ -90,7 +90,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "[-] Failed to read XML data from Nmap file: %s\n", nmap_path)
 		return
 	}
-	parsed_hosts,err := parse_nmap(xmlbytes)
+	parsed_hosts,err := import_nmap(xmlbytes)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[-] Failed to parse XML from Nmap file: %s\n", nmap_path)
 		return

@@ -12,9 +12,8 @@ import "encoding/xml"
 * i.e. "scanme.nmap.org": [22, 80, 9929, 31337]
 */
 
-func parse_nmap(xmldata []byte) ([]Host,error) {
-	parsed_hosts := make(map[string][]int)
-	output := []Host{}
+func parse_nmap(xmldata []byte) (map[string][]int,error) {
+	output := make(map[string][]int)
 	var parsed_scan NmapScan
 	err := xml.Unmarshal(xmldata, &parsed_scan)
 	if err != nil {
@@ -29,14 +28,21 @@ func parse_nmap(xmldata []byte) ([]Host,error) {
 			}
 			//add a host entry for each ip
 			for _,address := range host.Addresses {
-				parsed_hosts[address.IP] = ports
+				output[address.IP] = ports
 			}
 			//add a host entry for each FQDN
 			for _,hostname := range host.Hostnames.Hostnames {
-				parsed_hosts[hostname.Name] = ports
+				output[hostname.Name] = ports
 			}
 		}
 	}
+	return output,nil
+}
+
+func import_nmap(xmldata []byte) ([]Host,error) {
+	output := []Host{}
+	parsed_hosts,err := parse_nmap(xmldata)
+	if err != nil { return output,err }
 	for fqdn,ports := range parsed_hosts {
 		for _,port := range ports {
 			new_host := Host{}
@@ -45,6 +51,7 @@ func parse_nmap(xmldata []byte) ([]Host,error) {
 		}
 	}
 	return output,nil
+	
 }
 
 // Structs used by encoding/xml to parse the Nmap XML.

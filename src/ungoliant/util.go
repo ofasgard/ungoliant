@@ -1,9 +1,8 @@
 package main
 
 import "os"
-import "strconv"
 import "math/rand"
-import "encoding/csv"
+
 
 //Create a directory of it doesn't exist.
 
@@ -52,31 +51,4 @@ func string_in_slice(list []string, search string) bool {
 	return false
 }
 
-//Export a slice of Host objects into CSV format.
 
-func export_csv(filename string, records [][]string) error {
-	fd,err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	w := csv.NewWriter(fd)
-	for _,record := range records {
-		err = w.Write(record)
-		if err != nil {
-			return err
-		}
-	}
-	w.Flush()
-	return w.Error()
-}
-
-func hosts_to_csv(filename string, hosts []Host) error {
-	records := [][]string{}
-	records = append(records, []string{"Host", "Port", "Url", "Status Code", "Status Text"})
-	for _,host := range hosts {
-		for _,url := range host.urls {
-			records = append(records, []string{host.fqdn, strconv.Itoa(host.port), url.url, strconv.Itoa(url.statuscode), url.statustext})
-		}
-	}
-	return export_csv(filename, records)
-}
