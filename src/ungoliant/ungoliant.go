@@ -8,6 +8,7 @@ import "strconv"
 import "strings"
 import "time"
 import "math/rand"
+import "path/filepath"
 
 func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
@@ -33,7 +34,7 @@ func main() {
 		usage()
 		return
 	}
-	nmap_path := flag.Arg(0)
+	input_path := flag.Arg(0)
 	proxy_host := flag.Arg(1)
 	proxy_port,err := strconv.Atoi(flag.Arg(2))
 	if err != nil {
@@ -70,30 +71,44 @@ func main() {
 	defer fd.Close()
 	wordlist_data,err := ioutil.ReadAll(fd)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to read data from wordlist file: %s. Try use --wordlist to specify a path.\n", nmap_path)
+		fmt.Fprintf(os.Stderr, "[-] Failed to read data from wordlist file: %s. Try use --wordlist to specify a path.\n", wordlist_path)
 		return
 	}
 	wordlist := strings.Split(string(wordlist_data), "\n")
 	//Measure start time & print a summary of configuration info.
 	start_time := time.Now()
 	config_summary(proxy, proxy_host, proxy_port, chrome, len(wordlist), parallel_hosts, threads, timeout, start_time)
-	//Attempt to read and parse the Nmap file.
-	fmt.Println("[+] Parsing '" + nmap_path + "'...")
-	fd,err = os.Open(nmap_path)
+	//Attempt to read and parse the Nmap or CSV file.
+	fmt.Println("[+] Parsing '" + input_path + "'...")
+	fd,err = os.Open(input_path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to open Nmap file for reading: %s\n", nmap_path)
+		fmt.Fprintf(os.Stderr, "[-] Failed to open input file for reading: %s\n", input_path)
 		return
 	}
 	defer fd.Close()
-	xmlbytes,err := ioutil.ReadAll(fd)
+	input_bytes,err := ioutil.ReadAll(fd)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to read XML data from Nmap file: %s\n", nmap_path)
+		fmt.Fprintf(os.Stderr, "[-] Failed to read data from input file: %s\n", input_path)
 		return
 	}
-	parsed_hosts,err := import_nmap(xmlbytes)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to parse XML from Nmap file: %s\n", nmap_path)
-		return
+	input_ext := strings.ToLower(filepath.Ext(input_path))
+	var parsed_hosts []Host
+	switch input_ext {
+		case ".csv":
+			parsed_hosts,err = import_csv(input_bytes)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "[-] Failed to parse target hosts and ports from CSV file: %s\n", input_path)
+				return
+			}
+		case ".xml":
+			parsed_hosts,err = import_nmap(input_bytes)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "[-] Failed to parse target data from Nmap XML file: %s\n", input_path)
+				return
+			}
+		default:
+			fmt.Fprintf(os.Stderr, "[-] Invalid extension: %s - please provide either an Nmap XML file or a CSV file.\n", input_ext)
+			return
 	}
 	fmt.Println("[!] Identified " + strconv.Itoa(len(parsed_hosts)) + " open ports.")
 	//Now let's check for web servers.
