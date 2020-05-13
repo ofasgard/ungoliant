@@ -186,7 +186,7 @@ func main() {
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[-] Failed to write final results to file: results.csv\n")
+		fmt.Fprintf(os.Stderr, "[-] Failed to write final results to results.csv: %s\n", err.Error())
 	} else {
 		fmt.Println("[*] Wrote the webserver results to file: results.csv")
 	}
