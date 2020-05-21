@@ -10,7 +10,7 @@ type Host struct {
 	port int
 	https bool
 	urls []Url
-	heuristic Heuristic
+	notfound []Url
 }
 
 func (h *Host) init(fqdn string, port int, https bool) {
@@ -19,7 +19,11 @@ func (h *Host) init(fqdn string, port int, https bool) {
 	h.port = port
 	h.https = https
 	h.urls = []Url{}
-	h.heuristic = Heuristic{}
+	h.notfound = []Url{}
+	//add base URL to wordlist
+	base := Url{}
+	base.init(h.base_url(), h.https)
+	h.urls = append(h.urls, base)
 }
 
 func (h Host) base_url() string {
@@ -49,13 +53,39 @@ func (h Host) check_url(in_url string) bool {
 	return true
 }
 
+func (h *Host) generate_notfound(timeout int) error {
+	//generate the internal heuristic (NOT_FOUND)
+	//this is done by generating 3 random URLs and requesting them
+	//they are then stored as a benchmark
+	for i := 0; i < 3; i++ {
+		random_url := h.base_url() + "/" + random_string(10)
+		candidate := Url{}
+		candidate.init(random_url, h.https)
+		candidate.retrieve(false, "", 0, timeout)
+		if candidate.err != nil { return candidate.err }
+		h.notfound = append(h.notfound, candidate)
+	}
+	return nil
+}
+
+func (h Host) check_notfound(candidate Url) bool {
+	//check to see whether a retrieved URL matches the internal heuristic (NOT_FOUND)
+	//it only counts as a match if the heuristic is consistent across all 3 NOT_FOUND URLs
+	//true = NOT_FOUND, false = FOUND/INTERESTING
+	if (candidate.statuscode != h.notfound[0].statuscode) && int_slice_equal(h.notfound[0].statuscode, h.notfound[1].statuscode, h.notfound[2].statuscode) { return false }
+	if (candidate.header_server != h.notfound[0].header_server) && string_slice_equal(h.notfound[0].header_server, h.notfound[1].header_server, h.notfound[2].header_server) { return false }
+	if (candidate.proto != h.notfound[0].proto) && string_slice_equal(h.notfound[0].proto, h.notfound[1].proto, h.notfound[2].proto) { return false }
+	if (candidate.html_title != h.notfound[0].html_title) && string_slice_equal(h.notfound[0].html_title, h.notfound[1].html_title, h.notfound[2].html_title) { return false }
+	return true
+}
+
 func (h *Host) flush_urls() {
 	//goes through retrieved URLs, compares them to internal heuristic, discards any that match
 	//used to get rid of NOT_FOUND results from the internal database, and URLs that returned an error
 	output := []Url{}
 	for _,url := range h.urls {
 		if url.retrieved{
-			if (!h.heuristic.check_url(url)) && (url.err == nil) {
+			if (!h.check_notfound(url)) && (url.err == nil) {
 				output = append(output, url)
 			}
 		} else {
@@ -115,39 +145,3 @@ func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout in
 	}
 }
 
-// This struct is used to create a heuristic of what a NOT_FOUND response from a webserver looks like. If a field has a nil value, that field can't be used for comparisons.
-// If a Url matches the heuristic, it's considered to be NOT_FOUND. If it differs in any valid fields, it's considered to be FOUND.
-
-type Heuristic struct {
-	statuscode int
-	header_server string
-	proto string
-	html_title string
-}
-
-func (h Heuristic) check() bool {
-	//check if the object contains any valid heuristics
-	//if it evaluates to an uninitialised Heuristic object, it contains nothing of value
-	if h == (Heuristic{}) {
-		return false
-	}
-	return true
-}
-
-func (h Heuristic) check_url(input Url) bool {
-	//check if an Url object matches the heuristic
-	//returns false as soon as a field that doesn't match is identified; otherwise, returns true
-	if (h.statuscode != 0) && (input.statuscode != h.statuscode) {
-		return false
-	}
-	if (h.header_server != "") && (input.header_server != h.header_server) {
-		return false
-	}
-	if (h.proto != "") && (input.proto != h.proto) {
-		return false
-	}
-	if (h.html_title != "") && (input.html_title != h.html_title) {
-		return false
-	}
-	return true
-}

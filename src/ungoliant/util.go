@@ -51,4 +51,24 @@ func string_in_slice(list []string, search string) bool {
 	return false
 }
 
+//Check if a slice contains ONLY one value.
 
+func int_slice_equal(list ...int) bool {
+	if len(list) == 0 { return true }
+	search := list[0]
+	valid := true
+	for _,val := range list {
+		if val != search { valid = false}
+	}
+	return valid
+}
+
+func string_slice_equal(list ...string) bool {
+	if len(list) == 0 { return true }
+	search := list[0]
+	valid := true
+	for _,val := range list {
+		if val != search { valid = false}
+	}
+	return valid
+}

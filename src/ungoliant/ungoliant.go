@@ -17,7 +17,7 @@ func main() {
 	//Parse flags and input.
 	flag.Usage = usage
 	var parallel_ptr = flag.Int("parallel-hosts", 10, "")
-	var thread_ptr = flag.Int("threads", 5, "")
+	var thread_ptr = flag.Int("threads", 10, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
 	var dork_ptr = flag.Int("dork-depth", 3, "")
@@ -29,20 +29,26 @@ func main() {
 	wordlist_path := *wordlist_ptr
 	dork_depth := *dork_ptr
 	chrome_path := *chrome_ptr
-	//Check we have enough positional arguments.
-	if flag.NArg() != 3 {
+	//Validate positional arguments.
+	if flag.NArg() < 1 {
 		usage()
 		return
 	}
 	input_path := flag.Arg(0)
-	proxy_host := flag.Arg(1)
-	proxy_port,err := strconv.Atoi(flag.Arg(2))
-	if err != nil {
-		//the port could not be converted to an int
-		usage()
-		return
+	proxy_host := "127.0.0.1"
+	proxy_port := 8080
+	var err error
+	if flag.NArg() >= 2 {
+		proxy_host = flag.Arg(1)
 	}
-	//Validate positional arguments.
+	if flag.NArg() >= 3 {
+		proxy_port,err = strconv.Atoi(flag.Arg(2))
+		if err != nil {
+			usage()
+			return
+		}
+	}
+	//Validate optional arguments.
 	if threads < 1 {
 		usage()
 		return
@@ -138,19 +144,13 @@ func main() {
 	//Canary checks to ensure we can tell the difference between FOUND and NOT_FOUND pages.
 	fmt.Println("[+] Testing NOT_FOUND detection...")
 	checked_hosts := []Host{}
-	for index,host := range hosts {
-		known_good, canary_urls, err := canary_check(false, proxy_host, proxy_port, timeout, host)
+	for index,_ := range hosts {
+		err = hosts[index].generate_notfound(timeout)
 		if err == nil {
-			hosts[index].heuristic = generate_heuristic(known_good, canary_urls, false)
-			if hosts[index].heuristic.check() {
-				checked_hosts = append(checked_hosts, hosts[index])
-			} else {
-				hosts[index].heuristic = generate_heuristic(known_good, canary_urls, true)
-				if hosts[index].heuristic.check() { checked_hosts = append(checked_hosts, hosts[index]) }
-			}
+			checked_hosts = append(checked_hosts, hosts[index])
 		}
 	}
-	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified consistent NOT_FOUND heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
+	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
 	//Use wordlist to generate candidates for each checked host.
 	for i,_ := range checked_hosts {
 		checked_hosts[i].urls = generate_urls(checked_hosts[i], wordlist)
@@ -200,7 +200,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
 	fmt.Fprintf(os.Stderr, "\t--parallel-hosts <num>\tThe maximum number of hosts to scan at once. [DEFAULT: 10]\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads to use per host. [DEFAULT: 5]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads to use per host. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
