@@ -16,14 +16,12 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Parse flags and input.
 	flag.Usage = usage
-	var parallel_ptr = flag.Int("parallel-hosts", 10, "")
 	var thread_ptr = flag.Int("threads", 10, "")
 	var timeout_ptr = flag.Int("timeout", 5, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
 	var dork_ptr = flag.Int("dork-depth", 3, "")
 	var chrome_ptr = flag.String("chrome-path", "", "")
 	flag.Parse()
-	parallel_hosts := *parallel_ptr
 	threads := *thread_ptr
 	timeout := *timeout_ptr
 	wordlist_path := *wordlist_ptr
@@ -83,7 +81,7 @@ func main() {
 	wordlist := strings.Split(string(wordlist_data), "\n")
 	//Measure start time & print a summary of configuration info.
 	start_time := time.Now()
-	config_summary(proxy, proxy_host, proxy_port, chrome, len(wordlist), parallel_hosts, threads, timeout, start_time)
+	config_summary(proxy, proxy_host, proxy_port, chrome, len(wordlist), threads, timeout, start_time)
 	//Attempt to read and parse the Nmap or CSV file.
 	fmt.Println("[+] Parsing '" + input_path + "'...")
 	fd,err = os.Open(input_path)
@@ -153,7 +151,7 @@ func main() {
 	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
 	//Use wordlist to generate candidates for each checked host.
 	for i,_ := range checked_hosts {
-		checked_hosts[i].urls = generate_urls(checked_hosts[i], wordlist)
+		checked_hosts[i].generate_urls(wordlist)
 	}
 	//Do some Google dorking to add candidates, if Chrome is installed.
 	if chrome != "" {
@@ -178,11 +176,11 @@ func main() {
 	}
 	//Begin bruteforcing checked hosts.
 	fmt.Println("[+] Performing directory bruteforce on targets...")
-	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
+	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
 	//Do some scraping to identify more URLs.
 	fmt.Println("[+] Attempting to scrape identified pages...")
-	checked_hosts = scrape(checked_hosts, timeout, parallel_hosts, threads)
-	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, parallel_hosts, threads, checked_hosts)
+	checked_hosts = scrape(checked_hosts, timeout, threads)
+	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
@@ -199,8 +197,7 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
-	fmt.Fprintf(os.Stderr, "\t--parallel-hosts <num>\tThe maximum number of hosts to scan at once. [DEFAULT: 10]\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads to use per host. [DEFAULT: 10]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads. [DEFAULT: 10 per host]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
@@ -208,7 +205,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "\nExample: %s --timeout 10 nmap_results.xml 127.0.0.1 8080\n", os.Args[0])
 }
 
-func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string, wordlist_len int, parallel_hosts int, threads int, timeout int, start_time time.Time) {
+func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string, wordlist_len int, threads int, timeout int, start_time time.Time) {
 	fmt.Fprintf(os.Stdout, "\n")
 	fmt.Fprintf(os.Stdout, "\t[Start time] %s\n", start_time.Format("2 Jan 2006 15:04:05"))
 	if proxy {
@@ -217,9 +214,7 @@ func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string
 		fmt.Fprintf(os.Stdout, "\t[Proxy] FAILED\n")
 	}
 	fmt.Fprintf(os.Stdout, "\t[Wordlist] %d words\n", wordlist_len)
-	fmt.Fprintf(os.Stdout, "\t[Max parallel hosts] %d\n", parallel_hosts)
-	fmt.Fprintf(os.Stdout, "\t[Threads per host] %d\n", threads)
-	fmt.Fprintf(os.Stdout, "\t[Max possible threads] %d\n", (parallel_hosts * threads))
+	fmt.Fprintf(os.Stdout, "\t[Max threads] %d\n", threads)
 	fmt.Fprintf(os.Stdout, "\t[Request timeout] %d seconds\n", timeout)
 	if chrome == "" {
 		fmt.Fprintf(os.Stdout, "\t[Chrome Path] NOT FOUND\n")

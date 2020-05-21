@@ -160,8 +160,8 @@ func scrape_host(target *Host, timeout int, threads int, wg *sync.WaitGroup) {
 	}
 }
 
-func scrape(targets []Host, timeout int, parallel_hosts int, threads int) []Host {
-	//scrape_host(&checked_hosts[index], timeout, threads)
+func scrape(targets []Host, timeout int, threads int) []Host {
+	parallel_hosts := 10 //temporary until I can give scraping the dirb treatment
 	var wg sync.WaitGroup
 	//manage workers
 	workers := 0

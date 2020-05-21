@@ -43,6 +43,15 @@ func (h *Host) add_url(url string) {
 	}
 }
 
+func (h *Host) generate_urls(wordlist []string) {
+	//populate the host with a wordlist
+	baseurl := h.base_url()
+	for _,candidate := range wordlist {
+		new_url := baseurl + "/" + candidate
+		h.add_url(new_url)
+	}
+}
+
 func (h Host) check_url(in_url string) bool {
 	//check that a URL does not already exist in the Host
 	for _,url := range h.urls {
