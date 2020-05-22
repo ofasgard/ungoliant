@@ -31,6 +31,8 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	return hosts
 }
 
+// BRUTEFORCER BEGINS HERE
+
 type Bruteforcer struct {
 	proxy bool
 	proxy_host string
@@ -81,6 +83,8 @@ func (b *Bruteforcer) run() {
 	//Wait for all waitgroups to complete.
 	b.wg.Wait()
 }
+
+// WORKER BEGINS HERE
 
 func bruteforcer_worker(wg *sync.WaitGroup, input chan *Url, proxy bool, proxy_host string, proxy_port int, timeout int) {
 	defer wg.Done()
