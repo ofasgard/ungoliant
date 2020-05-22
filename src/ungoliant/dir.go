@@ -9,7 +9,9 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	bf.init(false, proxy_host, proxy_port, timeout, threads)
 	for index,_ := range hosts {
 		for urlindex,_ := range hosts[index].urls {
-			bf.add(&hosts[index].urls[urlindex])
+			if !hosts[index].urls[urlindex].retrieved {
+				bf.add(&hosts[index].urls[urlindex])
+			}
 		}
 	}
 	bf.run()
@@ -22,7 +24,9 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 		bf.init(true, proxy_host, proxy_port, timeout, threads)
 		for index,_ := range hosts {
 			for urlindex,_ := range hosts[index].urls {
-				bf.add(&hosts[index].urls[urlindex])
+				if !hosts[index].urls[urlindex].retrieved_proxy {
+					bf.add(&hosts[index].urls[urlindex])
+				}
 			}
 		}
 		bf.run()
