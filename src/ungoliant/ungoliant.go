@@ -116,17 +116,14 @@ func main() {
 	}
 	fmt.Println("[!] Identified " + strconv.Itoa(len(parsed_hosts)) + " open ports.")
 	//Now let's check for web servers.
-	fmt.Println("[+] Checking for HTTP web servers...")
-	http_hosts := checkweb(parsed_hosts, threads, timeout, false)
-	if len(http_hosts) > 0 {
-		fmt.Println("[!] Found " + strconv.Itoa(len(http_hosts)) + " HTTP servers.")
+	fmt.Println("[+] Checking for HTTP and HTTPS web servers...")
+	hosts := checkweb(parsed_hosts, threads, timeout)
+	if len(hosts) > 0 {
+		fmt.Println("[!] Found " + strconv.Itoa(len(hosts)) + " HTTP(S) servers.")
+	} else {
+		fmt.Fprintf(os.Stderr, "[-] Failed to identify any open HTTP(S) servers to test!\n")
+		return
 	}
-	fmt.Println("[+] Checking for HTTPS web servers...")
-	https_hosts := checkweb(parsed_hosts, threads, timeout, true)
-	if len(https_hosts) > 0 {
-		fmt.Println("[!] Found " + strconv.Itoa(len(https_hosts)) + " HTTPS servers.")
-	}
-	hosts := append(http_hosts, https_hosts...)
 	//Take a screenshot of each web server if Chrome is installed.
 	if chrome != "" {
 		fmt.Println("[+] Taking screenshots of identified web servers...")

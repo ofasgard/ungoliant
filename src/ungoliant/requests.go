@@ -61,7 +61,7 @@ func proxy_request(request_url string, proxy_host string, proxy_port int, timeou
 }
 
 /*
-* checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup)
+* checkweb_worker(timeout int, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup)
 *
 * Worker function for checking for a webserver.
 * Takes in the Host objects to check.
@@ -69,32 +69,39 @@ func proxy_request(request_url string, proxy_host string, proxy_port int, timeou
 * If a Host isn't a valid webserver, it returns an uninitialised Host object.
 */
 
-func checkweb_worker(timeout int, use_https bool, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
+func checkweb_worker(timeout int, verify bool, jobs chan Host, results chan Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for job := range jobs {
-		request_str := ""
-		if use_https { request_str += "https://" } else { request_str += "http://" }
-		request_str += job.fqdn + ":" + strconv.Itoa(job.port) + "/"
+		request_str := "https://" + job.fqdn + ":" + strconv.Itoa(job.port) + "/"
 		resp,err := basic_request(request_str, timeout)
 		if err == nil {
 			defer resp.Body.Close()
-			job.init(job.fqdn, job.port, use_https)
+			job.init(job.fqdn, job.port, true)
 			results <- job
-		} else {
-			results <- Host{}
+			continue
+		} 
+		request_str = "http://" + job.fqdn + ":" + strconv.Itoa(job.port) + "/"
+		resp,err = basic_request(request_str, timeout)
+		if err == nil {
+			defer resp.Body.Close()
+			job.init(job.fqdn, job.port, false)
+			results <- job
+			continue
 		}
+		results <- Host{}
 	}
 }
 
+
 /*
-* checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host
+* checkweb(hosts []Host, threads int, timeout int) []Host
 *
 * Worker management function for threaded directory bruteforcing.
 * Takes in the plain Host objects returned by the parse_nmap() function.
 * Returns Host objects corresponding to valid webservers.
 */
 
-func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
+func checkweb(hosts []Host, threads int, timeout int) []Host {
 	output := []Host{}
 	//divide the hosts into equally sized job lists
 	job_lists := [][]Host{}
@@ -119,7 +126,7 @@ func checkweb(hosts []Host, threads int, timeout int, use_https bool) []Host {
 		wg.Add(1)
 		jobs := make(chan Host, len(list))
 		results := make(chan Host, len(list))
-		go checkweb_worker(timeout, use_https, false, jobs, results, &wg)
+		go checkweb_worker(timeout, false, jobs, results, &wg)
 		for _,host := range list {
 			jobs <- host
 		}
