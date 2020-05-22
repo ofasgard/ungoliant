@@ -16,7 +16,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Parse flags and input.
 	flag.Usage = usage
-	var thread_ptr = flag.Int("threads", 5, "")
+	var thread_ptr = flag.Int("threads", 10, "")
 	var timeout_ptr = flag.Int("timeout", 10, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
 	var dork_ptr = flag.Int("dork-depth", 3, "")
@@ -146,9 +146,6 @@ func main() {
 		}
 	}
 	fmt.Println("[!] Of the original " + strconv.Itoa(len(hosts)) + " hosts, identified heuristics for " + strconv.Itoa(len(checked_hosts)) + " of them.")
-	//Update thread count to match number of hosts.
-	threads = threads * len(checked_hosts)
-	if threads < 1 { threads = 1 }
 	//Use wordlist to generate candidates for each checked host.
 	for i,_ := range checked_hosts {
 		checked_hosts[i].generate_urls(wordlist)
@@ -197,7 +194,7 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads per host. [DEFAULT: 5]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads per host. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
@@ -214,7 +211,7 @@ func config_summary(proxy bool, proxy_host string, proxy_port int, chrome string
 		fmt.Fprintf(os.Stdout, "\t[Proxy] FAILED\n")
 	}
 	fmt.Fprintf(os.Stdout, "\t[Wordlist] %d words\n", wordlist_len)
-	fmt.Fprintf(os.Stdout, "\t[Threads per host] %d\n", threads)
+	fmt.Fprintf(os.Stdout, "\t[Max threads] %d\n", threads)
 	fmt.Fprintf(os.Stdout, "\t[Request timeout] %d seconds\n", timeout)
 	if chrome == "" {
 		fmt.Fprintf(os.Stdout, "\t[Chrome Path] NOT FOUND\n")
