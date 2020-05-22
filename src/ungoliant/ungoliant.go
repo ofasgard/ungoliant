@@ -16,8 +16,8 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Parse flags and input.
 	flag.Usage = usage
-	var thread_ptr = flag.Int("threads", 10, "")
-	var timeout_ptr = flag.Int("timeout", 5, "")
+	var thread_ptr = flag.Int("threads", 5, "")
+	var timeout_ptr = flag.Int("timeout", 10, "")
 	var wordlist_ptr = flag.String("wordlist", "res/dirb.txt", "")
 	var dork_ptr = flag.Int("dork-depth", 3, "")
 	var chrome_ptr = flag.String("chrome-path", "", "")
@@ -197,8 +197,8 @@ func main() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
-	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads per host. [DEFAULT: 10]\n")
-	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 5]\n")
+	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads per host. [DEFAULT: 5]\n")
+	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--wordlist <file>\tA path to a wordlist file for directory bruteforcing. [DEFAULT: \"res/dirb.txt\"]\n")
 	fmt.Fprintf(os.Stderr, "\t--dork-depth <num>\tHow many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]\n")
 	fmt.Fprintf(os.Stderr, "\t--chrome-path <path>\tManually specify the location of the Chrome executable (used for screenshots and dorking).\n")
