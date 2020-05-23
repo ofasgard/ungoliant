@@ -3,10 +3,10 @@ package main
 import "sync"
 import "math/rand"
 
-func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, threads int, hosts []Host) []Host {
+func bruteforce(proxy bool, timeout int, threads int, hosts []Host) []Host {
 	//initial bruteforce without proxy
 	bf := Bruteforcer{}
-	bf.init(false, proxy_host, proxy_port, timeout, threads)
+	bf.init(false, timeout, threads)
 	for index,_ := range hosts {
 		for urlindex,_ := range hosts[index].urls {
 			if !hosts[index].urls[urlindex].retrieved {
@@ -21,7 +21,7 @@ func bruteforce(proxy bool, proxy_host string, proxy_port int, timeout int, thre
 	}
 	//run through proxy
 	if proxy {
-		bf.init(true, proxy_host, proxy_port, timeout, threads)
+		bf.init(true, timeout, threads)
 		for index,_ := range hosts {
 			for urlindex,_ := range hosts[index].urls {
 				if !hosts[index].urls[urlindex].retrieved_proxy {
@@ -48,10 +48,8 @@ type Bruteforcer struct {
 	wg sync.WaitGroup
 }
 
-func (b *Bruteforcer) init(proxy bool, proxy_host string, proxy_port int, timeout int, threads int) {
+func (b *Bruteforcer) init(proxy bool, timeout int, threads int) {
 	b.proxy = proxy
-	b.proxy_host = proxy_host
-	b.proxy_port = proxy_port
 	b.timeout = timeout
 	b.threads = threads
 	
@@ -71,7 +69,7 @@ func (b *Bruteforcer) run() {
 		b.wg.Add(1)
 		input_chan := make(chan *Url)
 		input_channels = append(input_channels, input_chan)
-		go bruteforcer_worker(&b.wg, input_chan, b.proxy, b.proxy_host, b.proxy_port, b.timeout)
+		go bruteforcer_worker(&b.wg, input_chan, b.proxy, b.timeout)
 	}
 	//Hand out URLs to all the goroutines we just created, using the input channels.
 	current_channel := 0
@@ -90,7 +88,7 @@ func (b *Bruteforcer) run() {
 
 // WORKER BEGINS HERE
 
-func bruteforcer_worker(wg *sync.WaitGroup, input chan *Url, proxy bool, proxy_host string, proxy_port int, timeout int) {
+func bruteforcer_worker(wg *sync.WaitGroup, input chan *Url, proxy bool, timeout int) {
 	defer wg.Done()
 	//Receive input from the channel until it is closed.
 	targets := []*Url{}
@@ -101,6 +99,6 @@ func bruteforcer_worker(wg *sync.WaitGroup, input chan *Url, proxy bool, proxy_h
 	}
 	//Go through the targets and retrieve each one.
 	for index,_ := range targets {
-		targets[index].retrieve(proxy, proxy_host, proxy_port, timeout)
+		targets[index].retrieve(proxy, timeout)
 	}
 }

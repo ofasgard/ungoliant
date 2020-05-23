@@ -13,6 +13,8 @@ Here's how it works:
 
 Ungoliant also logs its results to CSV, so you can parse it yourself if you want.
 
+Tip: If you are scanning lots of hosts at once, try increasing both the thread limit and timeout to a high value.
+
 ## Building
 
 Ungoliant has the following dependencies:

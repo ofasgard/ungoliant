@@ -70,7 +70,7 @@ func (h *Host) generate_notfound(timeout int) error {
 		random_url := h.base_url() + "/" + random_string(10)
 		candidate := Url{}
 		candidate.init(random_url, h.https)
-		candidate.retrieve(false, "", 0, timeout)
+		candidate.retrieve(false, timeout)
 		if candidate.err != nil { return candidate.err }
 		h.notfound = append(h.notfound, candidate)
 	}
@@ -128,14 +128,14 @@ func (u *Url) init(url string, https bool) {
 	u.err = nil
 }
 
-func (u *Url) retrieve(proxy bool, proxy_host string, proxy_port int, timeout int) {
+func (u *Url) retrieve(proxy bool, timeout int) {
 	//retrieve a URL via the proxy; this will set the "retrieved" flag regardless of whether it succeeds
 	u.retrieved = true
 	if proxy { u.retrieved_proxy = true }
 	var resp *http.Response
 	var err error
 	if proxy {
-		resp, err = proxy_request(u.url, proxy_host, proxy_port, timeout)
+		resp, err = proxy_request(u.url, timeout)
 	} else {
 		resp, err = basic_request(u.url, timeout)
 	}

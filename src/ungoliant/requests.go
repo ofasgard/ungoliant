@@ -8,6 +8,18 @@ import "time"
 import "strconv"
 import "sync"
 
+var tr_basic = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+var default_proxy,_ = url.Parse("http://127.0.0.1:8080")
+var tr_proxy = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(default_proxy)}
+
+func set_proxy(proxy_host string, proxy_port int) error {
+	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
+	proxy_url,err := url.Parse(proxy_str)
+	if err != nil { return err }
+	tr_proxy = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(proxy_url)}
+	return nil
+}
+
 /*
 * basic_request(request_url string, timeout int) (*http.Response,error)
 *
@@ -16,15 +28,12 @@ import "sync"
 
 func basic_request(request_url string, timeout int) (*http.Response,error) {
 	//prepare client and request
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
+	client := &http.Client{Transport: tr_basic, Timeout: time.Duration(timeout) * time.Second}
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
 	if err != nil {
 		return &http.Response{},err
 	}
-	req.Close = true
-	req.Header.Set("Connection", "close")
 	resp,err := client.Do(req)
 	if err != nil {
 		return &http.Response{},err
@@ -33,28 +42,19 @@ func basic_request(request_url string, timeout int) (*http.Response,error) {
 }
 
 /*
-* proxy_request(request_url string, proxy_host string, proxy_port int, timeout int) (*http.Response,error)
+* proxy_request(request_url string, timeout int) (*http.Response,error)
 *
 * Make a request through the specified HTTP proxy. Returns a response and error value. Fails if the proxy is down.
 */
 
-func proxy_request(request_url string, proxy_host string, proxy_port int, timeout int) (*http.Response,error) {
-	//prepare proxy URL
-	proxy_str := "http://" + proxy_host + ":" + strconv.Itoa(proxy_port)
-	proxy_url,err := url.Parse(proxy_str)
-	if err != nil {
-		return &http.Response{},err
-	}
+func proxy_request(request_url string, timeout int) (*http.Response,error) {
 	//prepare client and request
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, Proxy: http.ProxyURL(proxy_url)}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
+	client := &http.Client{Transport: tr_proxy, Timeout: time.Duration(timeout) * time.Second}
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
 	if err != nil {
 		return &http.Response{},err
 	}
-	req.Close = true
-	req.Header.Set("Connection", "close")
 	resp,err := client.Do(req)
 	if err != nil {
 		return &http.Response{},err

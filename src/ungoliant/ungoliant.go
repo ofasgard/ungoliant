@@ -9,11 +9,13 @@ import "strings"
 import "time"
 import "math/rand"
 import "path/filepath"
+import "log"
 
 func main() {
 	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
 	//Generate seed for random operations (pseudo-randomness is acceptable in this use case).
 	rand.Seed(time.Now().UnixNano())
+	log.SetOutput(ioutil.Discard)
 	//Parse flags and input.
 	flag.Usage = usage
 	var thread_ptr = flag.Int("threads", 10, "")
@@ -63,6 +65,7 @@ func main() {
 		proxy = false
 	} else {
 		resp.Body.Close()
+		set_proxy(proxy_host, proxy_port)
 	}
 	//Check for Chrome.
 	chrome := check_chrome(chrome_path)
@@ -173,11 +176,11 @@ func main() {
 	}
 	//Begin bruteforcing checked hosts.
 	fmt.Println("[+] Performing directory bruteforce on targets...")
-	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
+	checked_hosts = bruteforce(proxy, timeout, threads, checked_hosts)
 	//Do some scraping to identify more URLs.
 	fmt.Println("[+] Attempting to scrape identified pages...")
 	checked_hosts = scrape(checked_hosts, timeout, threads)
-	checked_hosts = bruteforce(proxy, proxy_host, proxy_port, timeout, threads, checked_hosts)
+	checked_hosts = bruteforce(proxy, timeout, threads, checked_hosts)
 	//Write results to a file.
 	err = hosts_to_csv("results.csv", checked_hosts)
 	if err != nil {
