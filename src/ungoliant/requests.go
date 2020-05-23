@@ -24,6 +24,7 @@ func basic_request(request_url string, timeout int) (*http.Response,error) {
 		return &http.Response{},err
 	}
 	req.Close = true
+	req.Header.Set("Connection", "close")
 	resp,err := client.Do(req)
 	if err != nil {
 		return &http.Response{},err
@@ -49,10 +50,11 @@ func proxy_request(request_url string, proxy_host string, proxy_port int, timeou
 	client := &http.Client{Transport: tr, Timeout: time.Duration(timeout) * time.Second}
 	//perform request and return error
 	req,err := http.NewRequest("GET", request_url, nil)
-	req.Close = true
 	if err != nil {
 		return &http.Response{},err
 	}
+	req.Close = true
+	req.Header.Set("Connection", "close")
 	resp,err := client.Do(req)
 	if err != nil {
 		return &http.Response{},err
@@ -75,7 +77,7 @@ func checkweb_worker(timeout int, verify bool, jobs chan Host, results chan Host
 		request_str := "https://" + job.fqdn + ":" + strconv.Itoa(job.port) + "/"
 		resp,err := basic_request(request_str, timeout)
 		if err == nil {
-			defer resp.Body.Close()
+			resp.Body.Close()
 			job.init(job.fqdn, job.port, true)
 			results <- job
 			continue
@@ -83,7 +85,7 @@ func checkweb_worker(timeout int, verify bool, jobs chan Host, results chan Host
 		request_str = "http://" + job.fqdn + ":" + strconv.Itoa(job.port) + "/"
 		resp,err = basic_request(request_str, timeout)
 		if err == nil {
-			defer resp.Body.Close()
+			resp.Body.Close()
 			job.init(job.fqdn, job.port, false)
 			results <- job
 			continue
