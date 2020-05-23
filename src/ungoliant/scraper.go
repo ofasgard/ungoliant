@@ -22,7 +22,7 @@ func scrape(targets []Host, timeout int, threads int) []Host {
 				result.parent.add_url(absolute_result)
 			}
 			for _,relative_result := range result.relative_results {
-				result.parent.add_url(base + relative_result)
+				result.parent.add_url(base + "/" + relative_result)
 			}
 		}
 	}
