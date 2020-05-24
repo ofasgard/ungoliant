@@ -30,7 +30,11 @@ func (h Host) base_url() string {
 	//calculate and return the base URL for this target
 	baseurl := ""
 	if h.https { baseurl = "https://" } else { baseurl = "http://" }
-	baseurl += h.fqdn + ":" + strconv.Itoa(h.port)
+	if (h.https && h.port == 443) || (!h.https && h.port == 80) {
+		baseurl += h.fqdn
+	} else {
+		baseurl += h.fqdn + ":" + strconv.Itoa(h.port)
+	}
 	return baseurl
 }
 
