@@ -38,7 +38,7 @@ Optional Flags:
 	--timeout <secs>		The timeout value (in seconds) for each request. [DEFAULT: 10]
 	--wordlist <file>		A path to a wordlist file for directory bruteforcing. [DEFAULT: "res/dirb.txt"]
 	--dork-depth <num>		How many pages of Google results to scrape per host (requires Chrome). [DEFAULT: 3]
-	--chrome-path <path>	Manually specify the location of the Chrome executable (used for screenshots and dorking).
+	--chrome-path <path>		Manually specify the location of the Chrome executable (used for screenshots and dorking).
 
 Example: bin/ungoliant --timeout 10 nmap_results.xml 127.0.0.1 8080
 ```
