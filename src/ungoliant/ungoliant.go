@@ -11,8 +11,10 @@ import "math/rand"
 import "path/filepath"
 import "log"
 
+var ungo_version = "1.0.0"
+
 func main() {
-	fmt.Println("Then the Unlight of Ungoliant rose up, even to the roots of the trees.")
+	fmt.Printf("Ungoliant v%s\n", ungo_version)
 	//Generate seed for random operations (pseudo-randomness is acceptable in this use case).
 	rand.Seed(time.Now().UnixNano())
 	log.SetOutput(ioutil.Discard)
@@ -195,7 +197,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "USAGE: %s <nmap xml file> <proxy IP> <proxy port>\n\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "USAGE: %s <xml/csv file> <proxy IP> <proxy port>\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Optional Flags:\n")
 	fmt.Fprintf(os.Stderr, "\t--threads <num>\t\tThe maximum number of threads per host. [DEFAULT: 10]\n")
 	fmt.Fprintf(os.Stderr, "\t--timeout <secs>\tThe timeout value (in seconds) for each request. [DEFAULT: 10]\n")
