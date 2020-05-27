@@ -11,6 +11,14 @@ Ungoliant is a webserver reconnaissance tool designed to work with an attack pro
 - Configurable thread limit & timeouts; capable of making 300+ HTTP requests/second.
 - Results are sent to Burp/ZAP and written to a CSV file.
 
+### Tested against...
+
+- [x] 10+ targets
+- [x] 50+ targets
+- [x] 100+ targets
+- [x] 300+ targets
+- [ ] 1000+ targets
+
 ## Installation
 
 Ungoliant has the following dependencies:
