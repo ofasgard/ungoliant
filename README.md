@@ -30,8 +30,8 @@ To fetch the dependencies and build the program, just do:
 ```shell
 $ git clone https://github.com/ofasgard/ungoliant
 $ cd ungoliant
-$ ./build.sh
-$ bin/ungoliant --help
+$ go get -d
+$ go build
 ```
 
 For some features like screenshots and Google dorking, you'll need to have Google Chrome installed.
